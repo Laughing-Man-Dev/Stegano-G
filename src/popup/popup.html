@@ -15,6 +15,7 @@
         <button id="embedBtn">Embed</button>
         <button id="extractBtn">Extract</button>
         <br><br>
+        <!-- Public Key -->
         <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
             color: blue; font-size: medium;" 
         class="publicKey"> Load or Generate a keypair.</code></p>
@@ -30,6 +31,7 @@
         <p id="keyOutput"></p>
         <button id="backToMain1">Back</button>
         <br><br>
+        <!-- Public Key -->
         <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
             color: blue; font-size: medium;" 
         class="publicKey"> Load or Generate a keypair.</code></p>
@@ -41,24 +43,27 @@
     -->
     <div id="embedView" class="view" style="display:none;">
         <h2>Embed a Message</h2>
+        <p> 1. Upload content [image] to embed or sign. </p>
+        <p> 2. Embed content based on the provided inputs. [Button selection for now.] </p>
+        <!-- <input type="file" id="imageInput" accept="image/*" /> -->
+        <!-- Input file to upload image -->
+        <input type="file" id="imageInput" accept="image/*">
+        <!-- Canvas to draw on -->
+        <canvas id="myCanvas" hidden="true"></canvas>
+        <!-- <canvas id="outputCanvas"></canvas> -->
+        <input type="password" id="password" placeholder="Enter password" />
+        <textarea id="message" placeholder="Enter your message"></textarea>
+        <br><br>
+        <!-- Action buttons -->
         <button id="sign">Sign Only</button>
         <button id="stamp">Stamp Only</button>
         <button id="stampSign">Stamp + Sign</button>
         <button id="stampEmbed">Stamp + Sign + Embed + Password + Message</button>
         <button id="stampEmbedReceivers">Stamp + Sign + Embed + Password + Message + Receiver(s)</button>
         <br><br>
-        <!-- <input type="file" id="imageInput" accept="image/*" /> -->
-        
-        <!-- Input file to upload image -->
-        <input type="file" id="imageInput" accept="image/*">
-        <!-- Canvas to draw on -->
-        <canvas id="myCanvas" hidden="true"></canvas>
-        <!-- <canvas id="outputCanvas"></canvas> -->
-        <textarea id="message" placeholder="Enter your message"></textarea>
-        <input type="password" id="password" placeholder="Enter password" />
-        <br><br>
         <button id="backToMain2">Back</button>
         <br><br>
+        <!-- Public Key -->
         <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
             color: blue; font-size: medium;" 
         class="publicKey"> Load or Generate a keypair.</code></p>
@@ -72,19 +77,23 @@
     -->
     <div id="extractView" class="view" style="display:none;">
         <h2>Extract a Message</h2>
+        <p> 1. Upload content [image] to extract from. </p>
+        <p> 2. Extract content based on the provided inputs. </p>
         <input type="file" id="imageInputExtract" accept="image/*" />
         <br><br>
+        <input type="text" id="signerPub" placeholder="Input signer's public key">
         <button id="extractSign">Check Signature</button>
         <br><br>
         <input type="password" id="passwordExtract" placeholder="Enter password" />
         <button id="extractPassword">Extract with Password</button>
-        <input type="text" id="privKey" placeholder="Input your PrivateKeySign">
+        <input type="text" id="privKey" placeholder="Input your PrivateKey [Sign]">
         <button id="extractPrivateKey">Extract with Private Key</button>
         <br><br>
-        <p id="outputText">Your output will be here.</p>
+        <p id="textOutput">If available: Your output will be here.</p>
         <br><br>
         <button id="backToMain3">Back</button>
         <br><br>
+        <!-- Public Key -->
         <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
             color: blue; font-size: medium;" 
         class="publicKey"> Load or Generate a keypair.</code></p>

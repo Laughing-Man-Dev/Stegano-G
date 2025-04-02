@@ -179,8 +179,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("stampEmbedReceivers").addEventListener("click", async function () {
         alert("Stamp + Sign + Embed + Receivers function to be implemented!");
 // USING TEMP DATA
-        var defaultMessage = "Nothing to see here, guess this was not for you.";
-        var receiverList = [
+        const defaultMessage = "Nothing to see here, guess this was not for you.";
+        const receiverList = [
             // key1: program/testing/testing_keys/8YrW23---eJ8bzv.json
             "8YrW23vqyzA6f95q6a94yCVDW7kTM1gbqEkAhg9jcmCoQCWGRnJqwBowpZeKpyE6f4jwWAjciW4uTTsPZUfW8s8XqAP5dtiT5Sq14wfrRZgtsi2JnJ6RGjzomZnTsreJ8bzv",
             // key2: program/testing/testing_keys/79yQ2U---HAmrKm.json
@@ -198,17 +198,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // Extract Functions (Placeholder)
+    // Uploaded image to check for extractable contents
+    const imageInputExtract = document.getElementById("imageInputExtract");
+    // Password field
+    const passwordExtract = document.getElementById("passwordExtract");
+    // Signer public key field
+    const signerPub = document.getElementById("signerPub");
+    // Reciever private key field. [Check from stored key in the future]
+    const privKey = document.getElementById("privKey");
+    // Output field
+    const textOutput = document.getElementById("textOutput");
+
+
+
     // Extract the signature from uploaded content [images currently]. Verify a signature
     document.getElementById("extractSign").addEventListener("click", function () {
         alert("Extract Signature function to be implemented!");
+        return extractSign(imageInputExtract);  // returns extracted signature.
     });
     // Extract a hidden file from uploaded content. 
     document.getElementById("extractPassword").addEventListener("click", function () {
         alert("Extract Password + Message function to be implemented!");
+        extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
     });
     // Extract a hidden file for specific destination key.
     document.getElementById("extractPrivateKey").addEventListener("click", function () {
         alert("Extract Password + Message + Private Key function to be implemented!");
+        extractUnique(imageInputExtract, privKey)
     });
 
     // Default View
