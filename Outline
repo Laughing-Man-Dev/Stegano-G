@@ -1,0 +1,35 @@
+/steganography-extension
+│
+├── /icons/                    # Icons for the extension
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+│
+├── /assets/                   # Other assets like default messages, standard images etc.  < NOT IN USE CURRENTLY
+│
+├── /src/                      # Source code for the extension
+│   ├── /background/           # Background script
+│   │   └── background.js      # < NOT IN USE CURRENTLY
+│   │
+│   ├── /content/              # Content script for web interactions (No current use, offline focus)
+│   │   └── content.js         # This could be for interacting with the current webpage if necessary  (No current use)
+│   │
+│   ├── /popup/                # Popup UI for user interactions
+│   │   ├── popup.html         # The HTML structure for the popup UI
+│   │   ├── popup.js           # Script to handle UI interactions
+│   │   └── popup.css          # Styling for the popup UI
+│   │
+│   ├── /utils/                # Utility functions (encryption, decryption, etc.)
+│   │   ├── steganography.js   # LSB steganography functions [StegTools]
+│   │   ├── helper.js          # Repeatable, helper, and  functions
+│   │   └── keypair.js         # Functions for keypair management [KeyTools]
+│   │
+│   └── /tests/                # Unit tests (if needed for functionality)
+│       └── <ASSOCIATED_SCRIPT_NAME>.test.js  # Tests for each of the functionalities
+│       └── images             # Image folder for testing
+│
+├── manifest.json              # Extension manifest for browser
+├── README.md                  # Documentation for the extension
+├── .gitignore                 # git ignore 
+├── Outline                    # Outline of the file structure [This file]
+└── package.json               # NPM dependencies and scripts  < NOT IN USE

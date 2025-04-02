@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stegano-G Web Extension</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <h1>Stegano-G Web Extension</h1>
+
+    <!-- Main Menu -->
+    <div id="mainMenu" class="view">
+        <button id="keyManagementBtn">Key Management</button>
+        <button id="embedBtn">Embed</button>
+        <button id="extractBtn">Extract</button>
+        <br><br>
+        <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
+            color: blue; font-size: medium;" 
+        class="publicKey"> Load or Generate a keypair.</code></p>
+    </div>
+
+    <!-- Key Management View -->
+    <div id="keyManagementView" class="view" style="display:none;">
+        <h2>Key Management</h2>
+        <button id="generateKey">Generate Key</button>
+        <button id="loadKey">Load Key</button><input id="privateKeyUpload" type="file" accept=".json">
+        <button id="saveKey">Save Key</button>
+        <button id="showInUseKey">Show In-Use Key</button>
+        <p id="keyOutput"></p>
+        <button id="backToMain1">Back</button>
+        <br><br>
+        <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
+            color: blue; font-size: medium;" 
+        class="publicKey"> Load or Generate a keypair.</code></p>
+    </div>
+
+    <!-- Embed View -->
+    <!--
+        added: id="myCanvas"
+    -->
+    <div id="embedView" class="view" style="display:none;">
+        <h2>Embed a Message</h2>
+        <button id="sign">Sign Only</button>
+        <button id="stamp">Stamp Only</button>
+        <button id="stampSign">Stamp + Sign</button>
+        <button id="stampEmbed">Stamp + Sign + Embed + Password + Message</button>
+        <button id="stampEmbedReceivers">Stamp + Sign + Embed + Password + Message + Receiver(s)</button>
+        <br><br>
+        <!-- <input type="file" id="imageInput" accept="image/*" /> -->
+        
+        <!-- Input file to upload image -->
+        <input type="file" id="imageInput" accept="image/*">
+        <!-- Canvas to draw on -->
+        <canvas id="myCanvas" hidden="true"></canvas>
+        <!-- <canvas id="outputCanvas"></canvas> -->
+        <textarea id="message" placeholder="Enter your message"></textarea>
+        <input type="password" id="password" placeholder="Enter password" />
+        <br><br>
+        <button id="backToMain2">Back</button>
+        <br><br>
+        <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
+            color: blue; font-size: medium;" 
+        class="publicKey"> Load or Generate a keypair.</code></p>
+    </div>
+
+    <!-- Extract View 
+     <button id="extractBtn">Extract</button>
+     added, unused:
+     id="privKey"
+    
+    -->
+    <div id="extractView" class="view" style="display:none;">
+        <h2>Extract a Message</h2>
+        <input type="file" id="imageInputExtract" accept="image/*" />
+        <br><br>
+        <button id="extractSign">Check Signature</button>
+        <br><br>
+        <input type="password" id="passwordExtract" placeholder="Enter password" />
+        <button id="extractPassword">Extract with Password</button>
+        <input type="text" id="privKey" placeholder="Input your PrivateKeySign">
+        <button id="extractPrivateKey">Extract with Private Key</button>
+        <br><br>
+        <p id="outputText">Your output will be here.</p>
+        <br><br>
+        <button id="backToMain3">Back</button>
+        <br><br>
+        <p><code style="word-wrap: break-word; word-break: break-all; text-align: center; 
+            color: blue; font-size: medium;" 
+        class="publicKey"> Load or Generate a keypair.</code></p>
+    </div>
+
+    <script src="popup.js" type="module"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SteganoSign Extension</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <h1>SteganoSign</h1>
+        <p>Embed and extract secure messages from images.</p>
+        
+        <label for="imageInput">Select an Image:</label>
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <label for="message">Message:</label>
+        <textarea id="message" placeholder="Enter your message"></textarea>
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter password">
+        
+        <button id="stampSign">Stamp & Sign</button>
+        <button id="stampEmbedSign">Stamp, Embed & Sign</button>
+        <button id="extract">Extract Message</button>
+        
+        <canvas id="outputCanvas"></canvas>
+        <p id="outputText"></p>
+    </div>
+    <script src="popup.js" type="module"></script>
+</body>
+</html>
+ -->

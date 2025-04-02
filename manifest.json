@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "Stegano-G Web Extension",
+    "version": "0.1.0",
+    "description": "Embed encrypted messages in images using steganography and cryptography.",
+    "permissions": ["storage"],
+    "host_permissions": ["<all_urls>"] ,
+    "action": {
+        "default_popup": "src/popup/popup.html",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        }
+    },
+    "background": {
+        "service_worker": "src/background/background.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["src/content/content.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["icons/*.png",
+            "src/utils/helper.js", "src/utils/steganography.js", "src/utils/keypairs.js"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "options_page": "src/options/options.html",
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    }
+}

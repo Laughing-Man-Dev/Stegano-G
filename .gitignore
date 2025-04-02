@@ -1,0 +1,6 @@
+# ignore all .vscode directory
+.vscode/
+
+# ignore testing. *.local.js 
+## use FUNCTION.test.js for tests to commit
+*.local.js
