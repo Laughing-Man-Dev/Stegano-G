@@ -9,11 +9,11 @@
  */
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-let keyPair = null; // Holds the generated key pair
+let keyPair = null; // Holds the generated key pair only lives in memory if not downloaded. 
 
 /**
  * Generates a new ECDSA key pair using P-384 and stores it in memory.
- * @returns {Promise<string>} The public key in Base58 format.
+ * @returns {Promise<Uint8Array>} The public key.
  */
 export async function keypairGen() {
     keyPair = await crypto.subtle.generateKey(
@@ -84,14 +84,14 @@ export async function keypairLoad(file) {
 
 /**
  * Returns the public key bytes array.
- * @returns {Promise<string>} The public key in Base58 format.
+ * @returns {Promise<Uint8Array>} The public key in Base58 format.
  */
 export async function getPubkey() {
     if (!keyPair || !keyPair.publicKey) {
         throw new Error("No public key available.");
     }
     const exportedPublicKey = await crypto.subtle.exportKey("raw", keyPair.publicKey);
-    return base58Encode(new Uint8Array(exportedPublicKey));
+    return new Uint8Array(exportedPublicKey);
 }
 
 /**

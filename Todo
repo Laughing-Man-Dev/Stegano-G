@@ -1,9 +1,11 @@
 # ToDo  
 
 Change getPubkey() [finger print]
+
 Rework imageProcessing()  [function commented in popup.js or the one you were testing outside project]
 Rework downloadImage()
 Rework Stamp
+
 Add Sign Function to helper.js out of keypair.js
 Add JSDoc style documentation. And maintain that habit. Comment HTML sections.
 Add error handling
