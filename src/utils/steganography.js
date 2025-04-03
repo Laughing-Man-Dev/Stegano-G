@@ -11,6 +11,7 @@
  */
 
 import { getPubkey, sign } from './keypairs.js';
+import {pubkey} from './helper.js';
 
 /**
  * Stamps the sender's public key onto the image visibly.
@@ -18,7 +19,7 @@ import { getPubkey, sign } from './keypairs.js';
  * @returns {Promise<HTMLCanvasElement>} - The image with the stamped key.
  */
 export async function stamp(image) {
-    const publicKey = await getPubkey();
+    const publicKey = await pubkey();
     //console.log(image);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");

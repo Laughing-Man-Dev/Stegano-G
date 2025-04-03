@@ -12,10 +12,11 @@
  */
 
 import { stamp, encrypt, decrypt, embed, extract } from "./steganography.js";
-import { sign, getPubkey } from "./keypairs.js";
+import { sign, getPubkey, base58Encode} from "./keypairs.js";
 
+// Returns a base58 encoded public key.
 export async function pubkey(){
-    return getPubkey();
+    return base58Encode(await getPubkey());
 };
 
 
@@ -168,6 +169,7 @@ export async function extractUnique(image, privateKey) {
             return await decrypt(recipient.message, privateKey);
         }
     }
+    console.log("No matching message found for the provided private key.")
     throw new Error("No matching message found for the provided private key.");
 }
 

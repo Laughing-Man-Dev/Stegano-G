@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //     switchView(INSERTNAMEView);
     // });
 
-    // Back to main menu
+// Back to main menu
         backToMain1.addEventListener("click", function () {
             switchView(mainMenu);
         });
@@ -119,9 +119,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // Get Canvas from HTML
     const canvasOut = document.getElementById("myCanvas");
         
-        // Event listener for status change and image processing to canvas Returns Canvas
+    // Event listener for status change and image processing to canvas Returns Canvas.
     imageInput.addEventListener("change", async function () {
-            // Pass input and canvas to imageProcessing
+        // Pass input and canvas to imageProcessing.
         let returnValue = imageProcessing(imageInput);
         console.log("Updating for image change.");
         console.log(imageInput);
@@ -130,20 +130,31 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     // Get password input field 
     const passphrase = document.getElementById("password");
-        // Event listener for status change
+        // Event listener for status change.
     passphrase.addEventListener("change",this.onchange);
     // Get message input field
     const messageIn = document.getElementById("message");
-        // Event listener for status change
+        // Event listener for status change.
     messageIn.addEventListener("change",this.onchange);
+        // Output message field for the sign output.
+    const embedTextOutput = document.getElementById("embedTextOutput");
 
-// Sign the content [images currently] with your private key
+
+// Sign the content [images currently] with your private key.
     document.getElementById("sign").addEventListener("click", async function () {
         alert("SignOnly function to be implemented!");
         let x = await sign(imageInput);
-        console.log(base58Encode(x));
+        let r = base58Encode(x);
+        console.log(r);
+        // write sign message to message box [Add other features]
+        const elements = embedTextOutput;
+        elements.innerHTML = r;
+        for (let i = 0; i < elements.length; i++) {
+            elements[i].innerHTML = r;
+          }
+        
     });
-// Stamp the content [images currently] with your public key 
+// Stamp the content [images currently] with your public key.
     document.getElementById("stamp").addEventListener("click", async function () {
         alert("Stamp Only function in progress");
         let i = await imageProcessing(imageInput)
@@ -206,28 +217,52 @@ document.addEventListener("DOMContentLoaded", function () {
     const signerPub = document.getElementById("signerPub");
     // Reciever private key field. [Check from stored key in the future]
     const privKey = document.getElementById("privKey");
-    // Output field
-    const textOutput = document.getElementById("textOutput");
+    // Signature output field
+    const signTextOutput = document.getElementById("signTextOutput");
+    // Output password message field
+    const extractTextOutput = document.getElementById("extractTextOutput");
+    // Output Private message field
+    const extractPrivTextOutput = document.getElementById("");
+    
 
-
-
-    // Extract the signature from uploaded content [images currently]. Verify a signature
+// Extract the signature from uploaded content [images currently]. Verify a signature
     document.getElementById("extractSign").addEventListener("click", function () {
         alert("Extract Signature function to be implemented!");
-        return extractSign(imageInputExtract);  // returns extracted signature.
+        let r = extractSign(imageInputExtract);  // returns extracted signature.
+            // write sign message to message box
+            const elements = signTextOutput;
+            elements.innerHTML = r;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].innerHTML = r;
+                }
+        return r;
     });
-    // Extract a hidden file from uploaded content. 
+// Extract a hidden file from uploaded content. 
     document.getElementById("extractPassword").addEventListener("click", function () {
         alert("Extract Password + Message function to be implemented!");
-        extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
+        let r = extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
+            // write password extracted message to message box
+            const elements = extractTextOutput;
+            elements.innerHTML = r;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].innerHTML = r;
+                }
+        return r;
     });
-    // Extract a hidden file for specific destination key.
+// Extract a hidden file for specific destination key.
     document.getElementById("extractPrivateKey").addEventListener("click", function () {
         alert("Extract Password + Message + Private Key function to be implemented!");
-        extractUnique(imageInputExtract, privKey)
+        extractUnique(imageInputExtract, privKey); // returns the extracted message if it exists. 
+            // write sign message to message box
+            const elements = extractPrivTextOutput;
+            elements.innerHTML = r;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].innerHTML = r;
+                }
+        return r;
     });
 
-    // Default View
+// Default View
     switchView(mainMenu);
 });
 
