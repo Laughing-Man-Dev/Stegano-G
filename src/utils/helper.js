@@ -2,24 +2,62 @@
  * Helper Utility for Managing Steganography, Encryption, and Signing
  * 
  * Functions:
+ * Utility
+ * - pubkey(): Encodes the public to to base58.
+ * - writeMessageOutput(): writes return value to the HTML div ID.
+ * Embed
+ * - sign(): NEEDS TO BE ADDED TO THIS LIB.
+ * - stamp(): NEEDS TO BE ADDED TO THIS LIB.
  * - stampSign(): Stamps and signs an image.
  * - stampEmbedSign(): Stamps, signs, and embeds a message with a password.
  * - stampEmbedSignDestination(): Stamps, signs, embeds with password, default message, and multiple receiver messages.
  * - embedAnonymous(): Embeds a message with password-only steganography.
+ * Extract
  * - extractSign(): Extracts and verifies the signature from an image.
  * - extractUnique(): Extracts a message using the receiver's private key.
  * - extractAnonymous(): Extracts a message using a password only.
  */
 
+// Imports from utils folder
 import { stamp, encrypt, decrypt, embed, extract } from "./steganography.js";
 import { sign, getPubkey, base58Encode } from "./keypairs.js";
+// Not yet implemented imports
+import {uploadImage, saveImage} from "./imageLoading.js";
+import {overlayText, overlayImage, displayUpdate} from "./imageOverlay.js";
 
 
 // Returns a base58 encoded public key. 
 // Asks for the Public key from the keypair in memorey. 
 export async function pubkey() {
     return base58Encode(await getPubkey());
-};
+}
+
+/**
+ * Write text to output message box
+ * Currently not in use for repeatitive function in poopup.js
+ * @param {HTMLElement} textOutput - The ID of the field. textOutput = document.getElementByID("ELEMENTNAME")
+ * @returns {Promise<HTMLElement>} - The updated element context.
+ */
+export async function writeMessageOutput(textOutput){
+    const elements = textOutput;
+    elements.innerHTML = r;
+    for (let i = 0; i < elements.length; i++) {
+    elements[i].innerHTML = r;
+    }
+    return elements;
+}
+
+/**
+ * Signs an image with the active private key as the native keypair.privatekey. 
+ * @param
+ * @returns
+ */
+
+/**
+ * Stamps an image with the in use public key as base58 output.
+ * @param
+ * @returns
+ */
 
 /**
  * Stamps and signs an image without embedding data.
@@ -85,7 +123,8 @@ export async function embedAnonymous(image, message, password) {
  */
 export async function extractSign(image) {
     const extractedData = extract(image);
-    return extractedData; // Signature verification logic should be added here.
+    // Signature verification logic should be added here.
+    return extractedData; 
 }
 
 /**
@@ -116,20 +155,4 @@ export async function extractAnonymous(image, password) {
     const extractedData = extract(image);
     const dataObject = JSON.parse(extractedData);
     return await decrypt(dataObject.default.message, password);
-}
-
-
-/**
- * Write text to output message box
- * Currently not in use for repeatitive function in poopup.js
- * @param {HTMLElement} textOutput - The ID of the field. textOutput = document.getElementByID("ELEMENTNAME")
- * @returns {Promise<HTMLElement>} - The updated element context.
- */
-export async function writeMessageOutput(textOutput){
-    const elements = textOutput;
-    elements.innerHTML = r;
-    for (let i = 0; i < elements.length; i++) {
-    elements[i].innerHTML = r;
-    }
-    return elements;
 }

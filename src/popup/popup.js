@@ -119,15 +119,18 @@ document.addEventListener("DOMContentLoaded", function () {
         return publicKey;
     });
 
+// ABOVE HERE IS STABLE 
+
 /** Embed Functions 
  * 
  */
     // Get File [image] input field from HTML
     const imageInput = document.getElementById("imageInput")
-    // Get Canvas from HTML
-    var myCanvas = document.getElementById("myCanvas");
     //Event listener for status change in file upload. 
     imageInput.addEventListener("change", uploadImage)
+    // Get Canvas from HTML
+    //var myCanvas = document.getElementById("myCanvas");
+    var myCanvas = null;
     // Get password input field 
     const passphrase = document.getElementById("password");
     // Event listener for status change.
@@ -141,9 +144,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // Sign the content [images currently] with your private key.
+        // sign logic needs to be updated but is working as intended to generate a sign message.
     document.getElementById("sign").addEventListener("click", async function () {
         alert("SignOnly implemented as: working.");
-        let x = await sign(imageInput);
+        let x = await sign(imageInput); // need to update the verifcation in sign()
         let r = base58Encode(x);
         console.log(r);
         // write sign message to message box [Add other features]
