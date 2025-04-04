@@ -23,10 +23,10 @@ export async function stamp(image) {
     //console.log(image);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = 500; //image.width;  // 500
-    canvas.height = 500; //image.height; // 500
-    ctx.drawImage(canvas, 50, 50);
-    ctx.font = "20px Arial";
+    canvas.width = image.width;  // 500;
+    canvas.height = image.height; // 500;
+    ctx.drawImage(canvas, image.width, image.height);
+    ctx.font = "50px Arial";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
     ctx.fillText(publicKey, 10, 20);
     return canvas;

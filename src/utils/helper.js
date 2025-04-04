@@ -12,79 +12,14 @@
  */
 
 import { stamp, encrypt, decrypt, embed, extract } from "./steganography.js";
-import { sign, getPubkey, base58Encode} from "./keypairs.js";
+import { sign, getPubkey, base58Encode } from "./keypairs.js";
 
-// Returns a base58 encoded public key.
-export async function pubkey(){
+
+// Returns a base58 encoded public key. 
+// Asks for the Public key from the keypair in memorey. 
+export async function pubkey() {
     return base58Encode(await getPubkey());
 };
-
-
-/**
- * Processes an image file and returns an HTMLImageElement once it's fully loaded.
- * 
- * @param {File} inputImage - The image file selected by the user.
- * @returns {Promise<HTMLImageElement>} - The loaded image element.
- */
-export async function imageProcessing(inputImage) {
-    // Get references to the file input and canvas
-        //const fileInput = document.getElementById('fileInput');
-        console.log(inputImage);
-        const fileInput = inputImage;
-        console.log(fileInput);
-        const canvas = document.getElementById('myCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.height = fileInput.height;
-        ctx.width = fileInput.width;
-
-
-        // Event listener for the file input change (when an image is uploaded)
-        fileInput.addEventListener('change', handleFileSelect);
-
-        // Function to handle file selection and drawing on the canvas
-        function handleFileSelect(event) {
-        const file = event.target.files[0];
-        
-        if (file) {
-            const reader = new FileReader();
-
-            // When the file is read, draw the image on the canvas
-            reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                // Draw the uploaded image onto the canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before drawing
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Draw image to fit canvas
-                
-                // Add text on top of the image
-                ctx.font = '30px Arial';
-                ctx.fillStyle = 'white';
-                ctx.fillText('Hello, World!', 50, 50); // Example text at coordinates (50, 50)
-            };
-            img.src = e.target.result;
-            };
-
-            // Read the file as a Data URL
-            reader.readAsDataURL(file);
-        }
-    }
-};
-
-export async function downloadImage(imageData) {
-        if (imageData) {
-          // Create a link element to trigger the download
-          const link = document.createElement('a');
-          link.download = 'canvas_image.png'; // Set the name of the downloaded file
-          link.href = imageData;
-          link.click(); // Programmatically click the link to download the image
-        } else {
-          alert('Please upload an image first!');
-        }
-
-}
-
-
-///////////////////////////////////////////////////
 
 /**
  * Stamps and signs an image without embedding data.
@@ -93,8 +28,6 @@ export async function downloadImage(imageData) {
  */
 export async function stampSign(image) {
     const canvas = await stamp(image);
-    //console.log(canvas);
-    downloadImage(canvas.toDataURL(this))
     return canvas;
 }
 
@@ -123,13 +56,13 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
     const canvas = await stamp(image);
     const encryptedDefault = await encrypt(defaultMessage, password);
     const signedDefault = await sign(encryptedDefault);
-    
+
     let embeddedData = { default: { message: signedDefault }, recipients: [] };
     for (const recipient of recipients) {
         const encryptedMessage = await encrypt(recipient.message, recipient.pubkey);
         embeddedData.recipients.push({ pubkey: recipient.pubkey, message: encryptedMessage });
     }
-    
+
     return embed(canvas, JSON.stringify(embeddedData));
 }
 
@@ -183,4 +116,20 @@ export async function extractAnonymous(image, password) {
     const extractedData = extract(image);
     const dataObject = JSON.parse(extractedData);
     return await decrypt(dataObject.default.message, password);
+}
+
+
+/**
+ * Write text to output message box
+ * Currently not in use for repeatitive function in poopup.js
+ * @param {HTMLElement} textOutput - The ID of the field. textOutput = document.getElementByID("ELEMENTNAME")
+ * @returns {Promise<HTMLElement>} - The updated element context.
+ */
+export async function writeMessageOutput(textOutput){
+    const elements = textOutput;
+    elements.innerHTML = r;
+    for (let i = 0; i < elements.length; i++) {
+    elements[i].innerHTML = r;
+    }
+    return elements;
 }

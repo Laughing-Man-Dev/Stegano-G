@@ -1,10 +1,9 @@
 # ToDo  
 
-Change getPubkey() [finger print]
+Change getPubkey() updated base58encoding location still need >> [finger print]
 
-Rework imageProcessing()  [function commented in popup.js or the one you were testing outside project]
 Rework downloadImage()
-Rework Stamp
+Rework Stamp, still needs to be implemented but exist in imageOverlay.js.
 
 Add Sign Function to helper.js out of keypair.js
 Add JSDoc style documentation. And maintain that habit. Comment HTML sections.
