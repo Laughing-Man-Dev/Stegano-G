@@ -13,7 +13,9 @@
  * - decrypt(): Decrypts messages using a password or private key.
  * - embed(): Hides encrypted data into an image using LSB steganography.
  * - extract(): Retrieves and decrypts hidden messages from an image.
- */
+ * https://developer.mozilla.org/en-US/docs/Web/API/Crypto/subtle
+ * https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas 
+*/
 
 import {pubkey} from './helper.js';
 
@@ -51,6 +53,8 @@ export async function stamp(image) {
  * is generated for each encryption operation to ensure ciphertext uniqueness.  The function then combines the IV and the
  * ciphertext, and returns the result as a base64-encoded string.  Base64 encoding is used to represent the binary data
  * in a format that can be easily stored and transmitted.
+ * 
+ * https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa
  */
 export async function encrypt(message, password) {
     // Create a text encoder to convert the message string into a Uint8Array, which is required for the Web Crypto API.

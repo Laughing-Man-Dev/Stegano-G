@@ -1,5 +1,8 @@
 // imageLoading.js - Module for handling image uploads and downloads
 // This module handles image uploading and downloading.
+// https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial
+
+
 
 /**
  * Handles the content [image] upload process.

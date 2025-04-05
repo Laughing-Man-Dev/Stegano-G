@@ -161,9 +161,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("stamp").addEventListener("click", async function () {
         alert("Stamp Only function in progress");
         console.log(myCanvas)
-        myCanvas = overlayText(publicKey, 0, 0)
+        myCanvas = overlayText(publicKey, 20, 50)
         console.log(myCanvas);
-        //console.log(i);
         displayUpdate(myCanvas);
         saveImage();
     });
