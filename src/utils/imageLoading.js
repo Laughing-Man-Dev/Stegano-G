@@ -61,30 +61,38 @@ export function uploadImage(event) {
 }
 
 /**
- * Saves the current canvas display as a downloadable image.
+ * Saves the current canvas display (base image with overlay) as a downloadable image.
  *
- * This function retrieves the canvas element from the 'myCanvas' div,
- * converts it to a data URL, creates a temporary anchor element, and
- * triggers a download.  This version is designed to be exported
- * and used as a module.
- * [overlays in this case are the instances of sign, stamp, embed, steganoG, etc. Need
- * to download them as a whole top layer canvas element and source element combined.]
- * Else some message or sign will be lost to improper layering.
+ * This function now takes the overlayCanvas as an argument.  It combines the
+ * base image and the overlay, then saves the combined result.
  *
+ * @param {HTMLCanvasElement} overlayCanvas - The canvas containing the overlay elements.
+ * If null, only the base image is saved.
  * @returns {void}
  */
-export function saveImage() {
-  // Get the canvas element from the 'myCanvas' div.
-  const myCanvas = document.getElementById('myCanvas');
+export function saveImage(overlayCanvas = null) {
+  // Get the HTML div element with the ID 'myCanvas'.
+  const myCanvasDiv = document.getElementById('myCanvas');
   // Check if an image has been uploaded and a canvas exists.
-  if (!myCanvas.imageCanvas) {
+  if (!myCanvasDiv.imageCanvas) {
     console.error("No image to save.");
     return; // Exit if no image is available.
   }
-  // Get the canvas that contains the image and any overlay elements.
-  const canvas = myCanvas.imageCanvas;
-  // Convert the canvas content to a data URL (PNG format).
-  const dataURL = canvas.toDataURL('image/png');
+  // Get the base image canvas.
+  const baseCanvas = myCanvasDiv.imageCanvas;
+  // Create a new canvas to combine the base image and the overlay.
+  const combinedCanvas = document.createElement('canvas');
+  combinedCanvas.width = baseCanvas.width;
+  combinedCanvas.height = baseCanvas.height;
+  const combinedCtx = combinedCanvas.getContext('2d');
+  // Draw the base image onto the combined canvas.
+  combinedCtx.drawImage(baseCanvas, 0, 0);
+  // If an overlayCanvas is provided, draw it on top of the base image.
+  if (overlayCanvas) {
+    combinedCtx.drawImage(overlayCanvas, 0, 0);
+  }
+  // Convert the combined canvas content to a data URL (PNG format).
+  const dataURL = combinedCanvas.toDataURL('image/png');
   // Create a temporary anchor element for the download link.
   const link = document.createElement('a');
   // Set the 'href' attribute to the data URL.

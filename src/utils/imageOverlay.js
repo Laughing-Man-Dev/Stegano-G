@@ -5,7 +5,7 @@
  * Creates a canvas element for overlaying content.
  * @returns {HTMLCanvasElement|null} - The overlay canvas or null if an image hasn't been uploaded.
  */
-function createOverlay() {
+async function createOverlay() {
     // Get the HTML div element with the ID 'myCanvas'. This div is expected to contain the base image canvas.
     // The comment suggests a potential improvement for handling multiple canvas destinations in the future.
     const myCanvas = document.getElementById('myCanvas');
@@ -25,21 +25,23 @@ function createOverlay() {
     // Set the height of the overlay canvas to be the same as the height of the base image canvas.
     overlayCanvas.height = myCanvas.imageCanvas.height;
     // Return the newly created overlay canvas element.
+    console.log("overlay created in createOverlay()")
     return overlayCanvas;
 }
 
 /**
  * Creates a text overlay on the image.
  * @param {string} text - The text to overlay.
- * @param {number} x - The x-coordinate of the text.
- * @param {number} y - The y-coordinate of the text.
- * @param {string} [font='50px Arial'] - The font of the text. Defaults to '50px Arial'.
+ * @param {number} x - The x-coordinate of the text. Defaults to 55.
+ * @param {number} y - The y-coordinate of the text. Defaults to 100.
+ * @param {string} [font='50px Arial'] - The font of the text. Defaults to '60px Arial'.
  * @param {string} [color='red'] - The color of the text. Defaults to 'red'.
  * @returns {HTMLCanvasElement|null} - The overlay canvas with the text or null if an error occurred.
  */
-export function overlayText(text, x, y, font = '50px Arial', color = 'red') {
+export async function overlayText(text, x = 55, y = 100, font = '60px Arial', color = 'red') {
     // Call the 'createOverlay' function to get a new canvas for the overlay.
-    const overlayCanvas = createOverlay();
+    const overlayCanvas = await createOverlay();
+    console.log("new overlay created: " + overlayCanvas);
     // Check if 'createOverlay' returned a valid canvas. If it returned null (due to no uploaded image), exit the function.
     if (!overlayCanvas) return null;
 
@@ -51,7 +53,7 @@ export function overlayText(text, x, y, font = '50px Arial', color = 'red') {
     ctx.fillStyle = color;
     // Draw the specified 'text' onto the overlay canvas at the given 'x' and 'y' coordinates.
     ctx.fillText(text, x, y);
-
+    console.log("text written to the screen: " + text);
     // Return the overlay canvas with the text drawn on it.
     return overlayCanvas;
 }
@@ -96,9 +98,10 @@ export function overlayImage(imageUrl, x, y, width, height) {
  * Updates the main canvas with the overlay.
  * @param {HTMLCanvasElement} overlayCanvas - The overlay canvas to draw onto the main canvas.
  */
-export function displayUpdate(overlayCanvas) {
+export async function displayUpdate(overlayCanvas) {
     // Get the HTML div element with the ID 'myCanvas'.
     const myCanvas = document.getElementById('myCanvas');
+    console.log(myCanvas);
     // Check if the 'myCanvas' div has the 'imageCanvas' property (the canvas containing the uploaded image).
     if (!myCanvas.imageCanvas) {
         // If not, log an error as an image needs to be uploaded first.
@@ -113,7 +116,7 @@ export function displayUpdate(overlayCanvas) {
     }
 
     // Get the 2D rendering context of the base image canvas.
-    const baseCtx = myCanvas.imageCanvas.getContext('2d');
+    const baseCtx = await myCanvas.imageCanvas.getContext('2d');
     // Draw the content of the 'overlayCanvas' onto the base image canvas at coordinates (0, 0).
     // This effectively merges the overlay with the original image displayed on the main canvas.
     baseCtx.drawImage(overlayCanvas, 0, 0);

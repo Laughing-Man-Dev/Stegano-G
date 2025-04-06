@@ -1,12 +1,13 @@
 import {
-    pubkey, stampSign,
+    pubkey, signature, stampSign,
     embedAnonymous, stampEmbedSign, stampEmbedSignDestination,
-    extractSign, extractAnonymous, extractUnique
+    extractSign, extractAnonymous, extractUnique,
+    writeMessageOutput,
+    stampPublicKey
 } from "../utils/helper.js";
 import { uploadImage, saveImage } from "../utils/imageLoading.js";
 import { overlayText, displayUpdate } from "../utils/imageOverlay.js";
 import { sign, keypairGen, keypairSave, keypairLoad, base58Encode } from "../utils/keypairs.js";
-import { stamp } from "../utils/steganography.js";
 
 document.addEventListener("DOMContentLoaded", function () {
     // Views
@@ -102,19 +103,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // Save keypair.
     document.getElementById("saveKey").addEventListener("click", function () {
         let savekeypair = keypairSave();
-        console.log(savekeypair);
+        console.log("keypair saved. upload to use in the future.");
         alert("Downloading keypair: " + savekeypair);
         // return savekeypair;
     });
     // Show current key. Used to get public key [stamp, share etc.]
     document.getElementById("showInUseKey").addEventListener("click", async function () {
+        let keyElement = document.getElementsByClassName("publicKey");
         publicKey = await pubkey();
-        const elements = document.getElementsByClassName("publicKey");
-        elements.innerHTML = publicKey;
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].innerHTML = publicKey;
-        }
-        console.log(publicKey);
+        writeMessageOutput(keyElement, publicKey);
         // alert("Show In-Use Key function to be implemented!");
         return publicKey;
     });
@@ -129,8 +126,8 @@ document.addEventListener("DOMContentLoaded", function () {
     //Event listener for status change in file upload. 
     imageInput.addEventListener("change", uploadImage)
     // Get Canvas from HTML
-    //var myCanvas = document.getElementById("myCanvas");
-    var myCanvas = null;
+    const myCanvas = document.getElementById("myCanvas");
+    //var myCanvas = null;
     // Get password input field 
     const passphrase = document.getElementById("password");
     // Event listener for status change.
@@ -141,43 +138,48 @@ document.addEventListener("DOMContentLoaded", function () {
     messageIn.addEventListener("change", this.onchange);
     // Output message field for the sign output.
     const embedTextOutput = document.getElementById("embedTextOutput");
+    // The output canvas to write over the the OG image.
+    var overlayCanvas = null;
+    // The output of the signature in base58 output.
+    var signatureOut = null;
 
 
     // Sign the content [images currently] with your private key.
-        // sign logic needs to be updated but is working as intended to generate a sign message.
+        // sign logic needs to be updated but is working as intended to generate a sign message output text.
     document.getElementById("sign").addEventListener("click", async function () {
         alert("SignOnly implemented as: working.");
-        let x = await sign(imageInput); // need to update the verifcation in sign()
-        let r = base58Encode(x);
-        console.log(r);
+        const signMsg = await signature(imageInput); // still needs updates. 
         // write sign message to message box [Add other features]
-        const elements = embedTextOutput;
-        elements.innerHTML = r;
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].innerHTML = r;
-        }
+        await writeMessageOutput(embedTextOutput, signMsg);
+        return signMsg;
     });
     // Stamp the content [images currently] with your public key.
     document.getElementById("stamp").addEventListener("click", async function () {
-        alert("Stamp Only function in progress");
-        console.log(myCanvas)
-        myCanvas = overlayText(publicKey, 20, 50)
-        console.log(myCanvas);
-        displayUpdate(myCanvas);
-        saveImage();
+        alert("Stamp Only implemented as: working as intended");
+        //myCanvas = stampPublicKey(imageInput, publicKey);
+        let text = await pubkey();
+        const overlayCanvas = await overlayText(text);
+        console.log("output canvas: " + overlayCanvas)
+        displayUpdate(overlayCanvas);
+        saveImage(overlayCanvas);
     });
     // Stamp the content [images currently] with your public key & sign with your private key.
     document.getElementById("stampSign").addEventListener("click", async function () {
         alert("Stamp + Sign function to be implemented!");
-        let r = await stampSign(imageInput);
-        return r;
+        overlayCanvas = await stampSign(imageInput);
+        displayUpdate(overlayCanvas);
+        console.log("new canvas: " + overlayCanvas)
+        saveImage(overlayCanvas);
     });
     // Stamp the content [images currently] with your public key & sign with your private key, and 
     // use steganography to embed a message sealed with a password.
     document.getElementById("stampEmbed").addEventListener("click", async function () {
-        alert("Stamp + Sign + Embed function to be implemented!");
-        let r = await stampEmbedSign(imageInput, messageIn, passphrase);
-        return r;
+        overlayCanvas, signatureOut = await stampEmbedSign(imageInput, passphrase, messageIn);
+        displayUpdate(overlayCanvas);
+        console.log("new canvas: " + overlayCanvas)
+        writeMessageOutput(embedTextOutput, signatureOut)
+        saveImage(overlayCanvas);
+        console.log("The sign message output is: " + signatureOut);
     });
     // Stamp the content [images currently] with your public key & sign with your private key, and 
     // use steganography to embed a message sealed with a password. Also allow for 
@@ -223,23 +225,14 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Extract Signature function to be implemented!");
         let r = extractSign(imageInputExtract);  // returns extracted signature.
         // write signature to message box
-        const elements = signTextOutput;
-        elements.innerHTML = r;
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].innerHTML = r;
-        }
-        return r;
+        writeMessageOutput(signTextOutput, r);
     });
     // Extract a hidden file from uploaded content. 
     document.getElementById("extractPassword").addEventListener("click", function () {
         alert("Extract Password + Message function to be implemented!");
         let r = extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
         // write password extracted message to message box
-        const elements = extractTextOutput;
-        elements.innerHTML = r;
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].innerHTML = r;
-        }
+        writeMessageOutput(extractTextOutput, r);
         return r;
     });
     // Extract a hidden file for specific destination key.
@@ -247,11 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Extract Password + Message + Private Key function to be implemented!");
         let r = extractUnique(imageInputExtract, privKey); // returns the extracted message if it exists. 
         // write sign message to message box
-        const elements = extractPrivTextOutput;
-        elements.innerHTML = r;
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].innerHTML = r;
-        }
+        writeMessageOutput(extractPrivTextOutput, r);
         return r;
     });
 

@@ -6,8 +6,8 @@
  * - pubkey(): Encodes the public to to base58.
  * - writeMessageOutput(): writes return value to the HTML div ID.
  * Embed
- * - sign(): NEEDS TO BE ADDED TO THIS LIB.
- * - stamp(): NEEDS TO BE ADDED TO THIS LIB.
+ * - signature(): NEEDS TO BE ADDED TO THIS LIB.
+ * - stampPublicKey(): NEEDS TO BE ADDED TO THIS LIB.
  * - stampSign(): Stamps and signs an image.
  * - stampEmbedSign(): Stamps, signs, and embeds a message with a password.
  * - stampEmbedSignDestination(): Stamps, signs, embeds with password, default message, and multiple receiver messages.
@@ -19,45 +19,69 @@
  */
 
 // Imports from utils folder
-import { stamp, encrypt, decrypt, embed, extract } from "./steganography.js";
+import { encrypt, decrypt, embed, extract } from "./steganography.js";
 import { sign, getPubkey, base58Encode } from "./keypairs.js";
 // Not yet implemented imports
 import {uploadImage, saveImage} from "./imageLoading.js";
 import {overlayText, overlayImage, displayUpdate} from "./imageOverlay.js";
 
 
-// Returns a base58 encoded public key. 
-// Asks for the Public key from the keypair in memorey. 
+/**
+ * Returns a base58 encoded public key. 
+ * Asks for the Public key from the keypair in memorey. 
+ * @returns {string} - The base58 encoded public key.
+ */
 export async function pubkey() {
     return base58Encode(await getPubkey());
 }
 
 /**
- * Write text to output message box
- * Currently not in use for repeatitive function in poopup.js
- * @param {HTMLElement} textOutput - The ID of the field. textOutput = document.getElementByID("ELEMENTNAME")
+ * Write text to output message box.
+ * @param {HTMLElement} elementID - The ID of the field. Var_Name = document.getElementByID("ELEMENTNAME")
+ * @param {string} msg - the message content to be written in the element
  * @returns {Promise<HTMLElement>} - The updated element context.
  */
-export async function writeMessageOutput(textOutput){
-    const elements = textOutput;
-    elements.innerHTML = r;
+export async function writeMessageOutput(elementID, msg){
+    const elements = elementID;
+    elements.innerHTML = msg;
     for (let i = 0; i < elements.length; i++) {
-    elements[i].innerHTML = r;
+    elements[i].innerHTML = msg;
     }
     return elements;
 }
 
 /**
  * Signs an image with the active private key as the native keypair.privatekey. 
- * @param
- * @returns
+ * @param {HTMLElement} inputFile - The image to sign.
+ * @returns {Promise<string>} - The base58 encoded signature output. 
  */
+export async function signature(inputFile){
+    let signResults = await sign(inputFile);
+    console.log("Signature in Crypto.Keypair.Private: " + signResults)
+    let base58Results = base58Encode(signResults);
+    console.log("Signature base58 output: " + base58Results)
+    return base58Results; // , signResults;  // maybe return both values?
+}
 
 /**
  * Stamps an image with the in use public key as base58 output.
- * @param
- * @returns
+ * @param {HTMLCanvasElement} image - canvas in the uploaded file.
+ * @param {string} text - By default calls pubkey() to get the active public key in base58.
+ * @returns {HTMLCanvasElement} - Returns a canvas element with the changes. 
  */
+export async function stampPublicKey(image, text) {
+    //text = pubkey();
+    //const text = await pubkey();
+    console.log("text to be stamped: " + text)
+    let canvas = image;
+    console.log("uploaded image: " + image);
+    canvas = overlayText(text);
+    console.log("current canvas: " + canvas);
+    return canvas;
+    saveImage();
+}
+
+
 
 /**
  * Stamps and signs an image without embedding data.
@@ -65,21 +89,31 @@ export async function writeMessageOutput(textOutput){
  * @returns {Promise<HTMLCanvasElement>} - The stamped and signed image.
  */
 export async function stampSign(image) {
-    const canvas = await stamp(image);
+    let publicKey = pubkey();
+    const canvas = stampPublicKey(image, publicKey);
+    let signOutput = signature(canvas);
+    console.log(signOutput);
     return canvas;
+    saveImage();
 }
 
 /**
  * Stamps, signs, and embeds a message with a password.
  * @param {HTMLImageElement} image - The image to modify.
- * @param {string} message - The message to embed.
  * @param {string} password - The password for encryption.
+ * @param {string} message - The message to embed.
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
  */
-export async function stampEmbedSign(image, message, password) {
-    const canvas = await stamp(image);
+export async function stampEmbedSign(image, password, message) {
+    const canvas = stampPublicKey();
+    console.log("Active Canvas" + canvas);
     const encryptedMessage = await encrypt(message, password);
-    return embed(canvas, encryptedMessage);
+    console.log("The encrypted message: " + encryptedMessage);
+    let r = embed(canvas, encryptedMessage);
+    console.log("embeded results: " + r)
+    signOut = signature(r) // signature output in base58
+
+    return r, signOut;
 }
 
 /**
@@ -91,7 +125,7 @@ export async function stampEmbedSign(image, message, password) {
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
  */
 export async function stampEmbedSignDestination(image, password, defaultMessage, recipients) {
-    const canvas = await stamp(image);
+    const canvas = await stampPublicKey(image);
     const encryptedDefault = await encrypt(defaultMessage, password);
     const signedDefault = await sign(encryptedDefault);
 

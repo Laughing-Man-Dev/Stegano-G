@@ -7,38 +7,16 @@
  *      - extract()
  * 
  * Functions:
- * - stamp(): Overlays the sender's public key onto the image. Move to helper.js
- * 
  * - encrypt(): Encrypts messages for secure storage.
  * - decrypt(): Decrypts messages using a password or private key.
  * - embed(): Hides encrypted data into an image using LSB steganography.
  * - extract(): Retrieves and decrypts hidden messages from an image.
+ * 
+ * Useful webpages:
  * https://developer.mozilla.org/en-US/docs/Web/API/Crypto/subtle
  * https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas 
 */
 
-import {pubkey} from './helper.js';
-
-/**
- * This FUNCTION needs to be moved to helper. and utilize the new image overlay lib.
- * 
- * Stamps the sender's public key onto the image visibly.
- * @param {HTMLImageElement} image - The image to stamp.
- * @returns {Promise<HTMLCanvasElement>} - The image with the stamped key.
- */
-export async function stamp(image) {
-    const publicKey = await pubkey();
-    //console.log(image);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = image.width;  // 500;
-    canvas.height = image.height; // 500;
-    ctx.drawImage(canvas, image.width, image.height);
-    ctx.font = "50px Arial";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText(publicKey, 10, 20);
-    return canvas;
-}
 
 /**
  * Encrypts a message using AES-GCM.

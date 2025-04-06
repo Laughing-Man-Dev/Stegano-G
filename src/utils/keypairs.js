@@ -6,6 +6,10 @@
  * - keypairLoad(): Loads a key pair from a JSON file.
  * - getPubkey(): Returns public key.
  * - sign(): Signs a message using the private key.
+ * 
+ * 
+ * 
+ *  https://developer.mozilla.org/en-US/docs/Web/API/Crypto/subtle
  */
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -116,6 +120,10 @@ export function base58Encode(buffer) {
     return digits.reverse().map(d => BASE58_ALPHABET[d]).join('');
 }
 
+
+
+
+
 /**
  * Signs a file [image] using the private key.
  * @param {string} file - The file [image] to sign.
@@ -134,6 +142,50 @@ export async function sign(file) {
     );
     return new Uint8Array(signature);
 }
+
+
+/**
+ * Verify a file [image] has the correct signature. 
+ * @param {HTMLElement} file - The upload file
+ * @param {CryptoKey} pubKey - The senders public key.
+ * @param {Uint8Array} signValue - the expected sign output.
+ * 
+ * Not implemented yet.
+ */
+export async function verify(pubKey, signValue, file) {
+    const publicKey = pubKey;
+    const signature = signValue;
+    const encoded = file;
+
+    let result = await window.crypto.subtle.verify(
+        {
+            name: "ECDSA",
+            hash: { name: "SHA-384" },
+        },
+        publicKey,
+        signature,
+        encoded
+    );
+    console.log(result)
+    return result ? "valid" : "invalid";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
