@@ -3,7 +3,8 @@ import {
     embedAnonymous, stampEmbedSign, stampEmbedSignDestination,
     extractSign, extractAnonymous, extractUnique,
     writeMessageOutput,
-    stampPublicKey
+    stampPublicKey,
+    displaySave
 } from "../utils/helper.js";
 import { uploadImage, saveImage } from "../utils/imageLoading.js";
 import { overlayText, displayUpdate } from "../utils/imageOverlay.js";
@@ -127,7 +128,6 @@ document.addEventListener("DOMContentLoaded", function () {
     imageInput.addEventListener("change", uploadImage)
     // Get Canvas from HTML
     const myCanvas = document.getElementById("myCanvas");
-    //var myCanvas = null;
     // Get password input field 
     const passphrase = document.getElementById("password");
     // Event listener for status change.
@@ -148,38 +148,40 @@ document.addEventListener("DOMContentLoaded", function () {
         // sign logic needs to be updated but is working as intended to generate a sign message output text.
     document.getElementById("sign").addEventListener("click", async function () {
         alert("SignOnly implemented as: working.");
-        const signMsg = await signature(imageInput); // still needs updates. 
+        signatureOut = await signature(imageInput); // still needs updates. 
         // write sign message to message box [Add other features]
-        await writeMessageOutput(embedTextOutput, signMsg);
-        return signMsg;
+        await writeMessageOutput(embedTextOutput, signatureOut);
+        return signatureOut;
     });
     // Stamp the content [images currently] with your public key.
     document.getElementById("stamp").addEventListener("click", async function () {
         alert("Stamp Only implemented as: working as intended");
-        //myCanvas = stampPublicKey(imageInput, publicKey);
-        let text = await pubkey();
-        const overlayCanvas = await overlayText(text);
+        overlayCanvas = await stampPublicKey();
         console.log("output canvas: " + overlayCanvas)
-        displayUpdate(overlayCanvas);
-        saveImage(overlayCanvas);
+        await displaySave(overlayCanvas);
+    });
+    // Embed a message in the content [image] 
+    document.getElementById("anonEmbed").addEventListener("click", async function () {
+        alert("Anonymously Embed");
+        overlayCanvas = await embedAnonymous(imageInput, messageIn, passphrase);
+        console.log("Message In: " + messageIn);
+        console.log("Password used: " + passphrase);
+        await displaySave(overlayCanvas);
+
     });
     // Stamp the content [images currently] with your public key & sign with your private key.
     document.getElementById("stampSign").addEventListener("click", async function () {
         alert("Stamp + Sign function to be implemented!");
-        overlayCanvas = await stampSign(imageInput);
-        displayUpdate(overlayCanvas);
-        console.log("new canvas: " + overlayCanvas)
-        saveImage(overlayCanvas);
+        overlayCanvas, signatureOut = await stampSign();
+        writeMessageOutput(embedTextOutput, signatureOut)
+        await displaySave(overlayCanvas);
     });
     // Stamp the content [images currently] with your public key & sign with your private key, and 
     // use steganography to embed a message sealed with a password.
     document.getElementById("stampEmbed").addEventListener("click", async function () {
-        overlayCanvas, signatureOut = await stampEmbedSign(imageInput, passphrase, messageIn);
-        displayUpdate(overlayCanvas);
-        console.log("new canvas: " + overlayCanvas)
+        overlayCanvas, signatureOut = await stampEmbedSign(passphrase, messageIn);
         writeMessageOutput(embedTextOutput, signatureOut)
-        saveImage(overlayCanvas);
-        console.log("The sign message output is: " + signatureOut);
+        await displaySave(overlayCanvas);
     });
     // Stamp the content [images currently] with your public key & sign with your private key, and 
     // use steganography to embed a message sealed with a password. Also allow for 
@@ -198,8 +200,14 @@ document.addEventListener("DOMContentLoaded", function () {
             // key3: program/testing/testing_keys/8WXtwt---iZr4XH.json
             "8WXtwtcDkBL5ubSEg7CREHj4ZCrtUbZfHwRVVp39E27mS91NXQC9somHbYdLTJjz4uYr7vDfAdjPPsvEvGpL4uo3bFkU13NAm8YLaTEEe7XVTNUqUnK8L3gfVEgFUeiZr4XH"
         ];
+        const keyMessage = [
+            
+
+        ]
         //
-        await stampEmbedSignDestination(imageInput, messageIn, passphrase, defaultMessage, receiverList);
+        overlayCanvas , signatureOut = await stampEmbedSignDestination(imageInput, passphrase, messageIn, defaultMessage, receiverList);
+        await writeMessageOutput(embedTextOutput, signatureOut)
+        await displaySave(overlayCanvas);
     });
 
 /** Extract Functions (Placeholder)
