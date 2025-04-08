@@ -22,8 +22,8 @@
 import { encrypt, decrypt, embed, extract } from "./steganography.js";
 import { sign, getPubkey, base58Encode } from "./keypairs.js";
 // Not yet implemented imports
-import {uploadImage, saveImage} from "./imageLoading.js";
-import {overlayText, overlayImage, displayUpdate} from "./imageOverlay.js";
+import {saveImage} from "./imageLoading.js";
+import {overlayText, overlayImage, displayUpdate, createOverlay} from "./imageOverlay.js";
 
 
 /**
@@ -32,8 +32,11 @@ import {overlayText, overlayImage, displayUpdate} from "./imageOverlay.js";
  * @returns {string} - The base58 encoded public key.
  */
 export async function pubkey() {
+    // Returns a base58 encoded version of the public key. 
+    // Used till we implement fingerprints.
     return base58Encode(await getPubkey());
 }
+
 
 /**
  * Write text to output message box.
@@ -82,6 +85,11 @@ export async function signature(inputFile){
     console.log("Signature base58 output: " + base58Results);
     return base58Results; // , signResults;  // maybe return both values?
 }
+
+/**
+ * EMBED & SIGN FUNCTIONS
+ */
+
 
 /**
  * Stamps an image with the in use public key as base58 output.
@@ -170,15 +178,16 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
 // Remove
 
 // Not implemented correctly:
-    // Currently: takes recipient array and gives them all the same signed default message this is incorrect behavior
+    // Currently: takes recipient array and gives them all the same signed default message 
+        // this is incorrect behavior
     // The message should be in the passed over recipients list 
-    // Intended: take recipient array containing unique messages for each reciever. 
-    // pubkey: "KEYABCDEFG1234567890XYZ12" message: "Uniques message for reciever[i]"
-    // pubkey: "KEYABCDEFG1234567890XYZ123" message: "Uniques message for reciever[i+1]"
-    // pubkey: "KEYABCDEFG1234567890XYZ1234" message: "Uniques message for reciever[i+2]"
+        // Intended: take recipient array containing unique messages for each reciever. 
+        // pubkey: "KEYABCDEFG1234567890XYZ12" message: "Uniques message for reciever[i]"
+        // pubkey: "KEYABCDEFG1234567890XYZ123" message: "Uniques message for reciever[i+1]"
+        // pubkey: "KEYABCDEFG1234567890XYZ1234" message: "Uniques message for reciever[i+2]"
     let embeddedData = { default: { message: signedDefault }, recipients: [] };
     console.log("The embedded data" + embeddedData);
-    // This function should work for the future and getting the unique messages into the file.
+    // This function should work for the future and getting the unique messages via recipient.message[i] into the file.
     for (const recipient of recipients) {
         const encryptedMessage = await encrypt(recipient.message, recipient.pubkey);
         embeddedData.recipients.push({ pubkey: recipient.pubkey, message: encryptedMessage });
@@ -204,10 +213,15 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
  */
 export async function embedAnonymous(image, message, password) {
-    
+    const overlayCanvas = createOverlay();
     const encryptedMessage = await encrypt(message, password);
-    return embed(image, encryptedMessage);
+    return embed(overlayCanvas, encryptedMessage);
 }
+
+/**
+ * EXTRACT FUNCTIONS
+ */
+
 
 /**
  * Extracts and verifies a signature from an image.

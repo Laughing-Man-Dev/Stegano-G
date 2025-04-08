@@ -5,7 +5,7 @@
  * Creates a canvas element for overlaying content.
  * @returns {HTMLCanvasElement|null} - The overlay canvas or null if an image hasn't been uploaded.
  */
-async function createOverlay() {
+export async function createOverlay() {
     // Get the HTML div element with the ID 'myCanvas'. This div is expected to contain the base image canvas.
     // The comment suggests a potential improvement for handling multiple canvas destinations in the future.
     const myCanvas = document.getElementById('myCanvas');

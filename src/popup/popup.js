@@ -4,7 +4,7 @@ import {
     extractSign, extractAnonymous, extractUnique,
     writeMessageOutput,
     stampPublicKey,
-    displaySave
+    displaySave,
 } from "../utils/helper.js";
 import { uploadImage, saveImage } from "../utils/imageLoading.js";
 import { overlayText, displayUpdate } from "../utils/imageOverlay.js";
@@ -129,13 +129,13 @@ document.addEventListener("DOMContentLoaded", function () {
     // Get Canvas from HTML
     const myCanvas = document.getElementById("myCanvas");
     // Get password input field 
-    const passphrase = document.getElementById("password");
+    var passphrase = document.getElementById("password");
     // Event listener for status change.
-    passphrase.addEventListener("change", this.onchange);
+    //passphrase.addEventListener("change", onTextUpdate);
     // Get message input field
-    const messageIn = document.getElementById("message");
+    var messageIn = document.getElementById("message");
     // Event listener for status change.
-    messageIn.addEventListener("change", this.onchange);
+    //messageIn.addEventListener("change", onTextUpdate);
     // Output message field for the sign output.
     const embedTextOutput = document.getElementById("embedTextOutput");
     // The output canvas to write over the the OG image.
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Embed a message in the content [image] 
     document.getElementById("anonEmbed").addEventListener("click", async function () {
         alert("Anonymously Embed");
-        overlayCanvas = await embedAnonymous(imageInput, messageIn, passphrase);
+        overlayCanvas = await embedAnonymous(imageInput, messageIn.value, passphrase.value);
         console.log("Message In: " + messageIn);
         console.log("Password used: " + passphrase);
         await displaySave(overlayCanvas);
@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Stamp the content [images currently] with your public key & sign with your private key, and 
     // use steganography to embed a message sealed with a password.
     document.getElementById("stampEmbed").addEventListener("click", async function () {
-        overlayCanvas, signatureOut = await stampEmbedSign(passphrase, messageIn);
+        overlayCanvas, signatureOut = await stampEmbedSign(passphrase.value, messageIn.value);
         writeMessageOutput(embedTextOutput, signatureOut)
         await displaySave(overlayCanvas);
     });
@@ -201,11 +201,11 @@ document.addEventListener("DOMContentLoaded", function () {
             "8WXtwtcDkBL5ubSEg7CREHj4ZCrtUbZfHwRVVp39E27mS91NXQC9somHbYdLTJjz4uYr7vDfAdjPPsvEvGpL4uo3bFkU13NAm8YLaTEEe7XVTNUqUnK8L3gfVEgFUeiZr4XH"
         ];
         const keyMessage = [
-            
+
 
         ]
         //
-        overlayCanvas , signatureOut = await stampEmbedSignDestination(imageInput, passphrase, messageIn, defaultMessage, receiverList);
+        overlayCanvas , signatureOut = await stampEmbedSignDestination(imageInput, passphrase.value, messageIn.value, defaultMessage, receiverList);
         await writeMessageOutput(embedTextOutput, signatureOut)
         await displaySave(overlayCanvas);
     });
