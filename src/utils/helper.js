@@ -5,6 +5,7 @@
  * Utility
  * - pubkey(): Encodes the public to to base58.
  * - writeMessageOutput(): Writes return value to the HTML div ID.
+ * - dispalySave(): Updates the currently active display and saves the current image in canvasOverlay/finalCanvas.
  * Embed
  * - signature(): Uses the crypto.subtle.sign() function and returns base58 output
  * - stampPublicKey(): Stamps the public key on an image.
@@ -22,8 +23,8 @@
 import { encrypt, decrypt, embed, extract } from "./steganography.js";
 import { sign, getPubkey, base58Encode } from "./keypairs.js";
 // Not yet implemented imports
-import {saveImage} from "./imageLoading.js";
-import {overlayText, overlayImage, displayUpdate, createOverlay} from "./imageOverlay.js";
+import { saveImage } from "./imageLoading.js";
+import { overlayText, overlayImage, displayUpdate, createOverlay } from "./imageOverlay.js";
 
 
 /**
@@ -44,14 +45,15 @@ export async function pubkey() {
  * @param {string} msg - the message content to be written in the element
  * @returns {Promise<HTMLElement>} - The updated element context.
  */
-export async function writeMessageOutput(elementID, msg){
+export async function writeMessageOutput(elementID, msg) {
     // Sets elements to the ID given as param
     const elements = elementID;
     // Writes message/text to the html
     elements.innerHTML = msg;
+    console.log("Writing: " + msg);
     // types out each letter
     for (let i = 0; i < elements.length; i++) {
-    elements[i].innerHTML = msg;
+        elements[i].innerHTML = msg;
     }
     // returns the new element
     return elements;
@@ -76,7 +78,7 @@ export async function displaySave(canvasToSave) {
  * @param {HTMLElement} inputFile - The image to sign.
  * @returns {Promise<string>} - The base58 encoded signature output. 
  */
-export async function signature(inputFile){
+export async function signature(inputFile) {
     // Takes the input file [images currently] and signs using crypto.subtle.sign() returns Array8Byte
     let signResults = await sign(inputFile);
     console.log("Signature in Crypto.Keypair.Private: " + signResults);
@@ -88,6 +90,8 @@ export async function signature(inputFile){
 
 /**
  * EMBED & SIGN FUNCTIONS
+ * These fucntions are used to either embed or sign a content [image].
+ * Each return value should be at least a canvas and any other return value. 
  */
 
 
@@ -112,7 +116,7 @@ export async function stampPublicKey() {
  * Stamps and signs an image without embedding data.
  * @param {HTMLImageElement} image - The image to stamp and sign.
  * @returns {Promise<HTMLCanvasElement>} - The stamped and signed image.
- * @returns {string} 
+ * @returns {string} - The signed output of the canvas in base58.
  */
 export async function stampSign() {
     // Calls stampPublicKey to return a newly created canvas object. Based on the uploaded image. 
@@ -121,15 +125,15 @@ export async function stampSign() {
     let signOutput = await signature(canvas);
     console.log("signature output:" + signOutput);
     // Returns the new canvas object and the signed output text in base58.
-    return canvas, signOutput;
+    return [canvas, signOutput];
 }
 
 /**
- * Stamps, signs, and embeds a message with a password.
- * // @param {HTMLImageElement} image - The image to modify.
+ * Stamps, signs, and embeds a message with a password into the image. 
  * @param {string} password - The password for encryption.
  * @param {string} message - The message to embed.
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
+ * @returns {Promise<string>} - The signed output of the final image in base58. 
  */
 export async function stampEmbedSign(password, message) {
     // Calls stampPublicKey to return a newly created canvas object. Based on the uploaded image. 
@@ -143,9 +147,9 @@ export async function stampEmbedSign(password, message) {
     let finalCanvas = await embed(canvas, encryptedMessage);
     console.log("embeded result canvas: " + finalCanvas);
     // Signs the new canvas and returns a base58 sign output string.
-    let signOutput = signature(finalCanvas); // Signature output in base58
+    let signOutput = await signature(finalCanvas); // Signature output in base58
     // Returns the finalCanvas and the sign message output.
-    return finalCanvas, signOutput;
+    return [finalCanvas, signOutput];
 }
 
 /**
@@ -171,20 +175,20 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
     const encryptedDefault = await encrypt(defaultMessage, password);
     console.log("The encrypted message: " + encryptedDefault)
 
-// Remove
+    // Remove
     // Sign the Defalut message. THIS SHOULD BE REMOVED FOR THE FINAL SIGN INSTEAD.
     const signedDefault = await sign(encryptedDefault);
     console.log("The signedDefault message: " + signedDefault);
-// Remove
+    // Remove
 
-// Not implemented correctly:
+    // Not implemented correctly:
     // Currently: takes recipient array and gives them all the same signed default message 
-        // this is incorrect behavior
+    // this is incorrect behavior
     // The message should be in the passed over recipients list 
-        // Intended: take recipient array containing unique messages for each reciever. 
-        // pubkey: "KEYABCDEFG1234567890XYZ12" message: "Uniques message for reciever[i]"
-        // pubkey: "KEYABCDEFG1234567890XYZ123" message: "Uniques message for reciever[i+1]"
-        // pubkey: "KEYABCDEFG1234567890XYZ1234" message: "Uniques message for reciever[i+2]"
+    // Intended: take recipient array containing unique messages for each reciever. 
+    // pubkey: "KEYABCDEFG1234567890XYZ12" message: "Uniques message for reciever[i]"
+    // pubkey: "KEYABCDEFG1234567890XYZ123" message: "Uniques message for reciever[i+1]"
+    // pubkey: "KEYABCDEFG1234567890XYZ1234" message: "Uniques message for reciever[i+2]"
     let embeddedData = { default: { message: signedDefault }, recipients: [] };
     console.log("The embedded data" + embeddedData);
     // This function should work for the future and getting the unique messages via recipient.message[i] into the file.
@@ -195,14 +199,14 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
         console.log("Message placed in image: " + recipient.message);
     }
     // Creates the final canvas by embedding the totality of the data into a new canvas,
-    console.log("Returning the following values: " );
-    const finalCanvas = embed(canvas, JSON.stringify(embeddedData));
+    console.log("Returning the following values: ");
+    const finalCanvas = await embed(canvas, JSON.stringify(embeddedData));
     // Signs the new canvas and returns a base58 sign output string.
-    let signOutput = signature(finalCanvas); // Signature output in base58
+    let signOutput = await signature(finalCanvas); // Signature output in base58
     console.log("The embeded canvas: " + finalCanvas);
     console.log("The signature output: " + signOutput);
     // Returns the finalCanvas and the sign message output.
-    return finalCanvas, signOutput;
+    return [finalCanvas, signOutput];
 }
 
 /**
@@ -213,15 +217,18 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
  */
 export async function embedAnonymous(image, message, password) {
-    const overlayCanvas = createOverlay();
+    let canvas = image;
+    canvas = await createOverlay();
     const encryptedMessage = await encrypt(message, password);
-    return embed(overlayCanvas, encryptedMessage);
+    console.log("The encrypted message embeded in the canvas: " + encryptedMessage);
+    return await embed(canvas, encryptedMessage);
 }
 
 /**
  * EXTRACT FUNCTIONS
+ * 
+ * These functions should extract data and return a value in plain text for the user to read. 
  */
-
 
 /**
  * Extracts and verifies a signature from an image.
@@ -234,7 +241,7 @@ export async function embedAnonymous(image, message, password) {
 export async function extractSign(image) {
     const extractedData = extract(image);
     // Signature verification logic should be added here.
-    return extractedData; 
+    return extractedData;
 }
 
 /**
