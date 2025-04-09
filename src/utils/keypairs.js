@@ -170,27 +170,6 @@ export async function verify(pubKey, signValue, file) {
     return result ? "valid" : "invalid";
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// NOT IMPLEMENTED Fingerprinting to make the pubkey shorter for use. 
 // Need to test and modify. 
 

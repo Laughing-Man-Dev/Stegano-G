@@ -73,9 +73,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // });
 
 
-/* Key Management Functions (Placeholder for now)
-    * 
-    */
+    /* Key Management Functions (Placeholder for now)
+        * 
+        */
     var keypair = null;
     var publicKey = null;
 
@@ -117,9 +117,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return publicKey;
     });
 
-/** Embed Functions 
- * 
- */
+    /** Embed Functions 
+     * 
+     */
     // Get File [image] input field from HTML
     const imageInput = document.getElementById("imageInput")
     //Event listener for status change in file upload. 
@@ -143,9 +143,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Array to hold the outputs of multiple return values. 
     var returnArray = [overlayCanvas, signatureOut];
 
-
     // Sign the content [images currently] with your private key.
-        // sign logic needs to be updated but is working as intended to generate a sign message output text.
+    // sign logic needs to be updated but is working as intended to generate a sign message output text.
     document.getElementById("sign").addEventListener("click", async function () {
         //alert("SignOnly implemented as: working.");
         signatureOut = await signature(imageInput); // still needs updates. 
@@ -188,9 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await displaySave(overlayCanvas);
         console.log("End of stampEmbedSign() function.");
     });
-
-
-// ABOVE HERE IS STABLE 
+    // ABOVE HERE IS STABLE 
     // Stamp the content [images currently] with your public key & sign with your private key, and 
     // use steganography to embed a message sealed with a password. Also allow for 
     // multiple message(s) with an intended reciever(s) for each. Can only be extracted 
@@ -209,25 +206,33 @@ document.addEventListener("DOMContentLoaded", function () {
             "8WXtwtcDkBL5ubSEg7CREHj4ZCrtUbZfHwRVVp39E27mS91NXQC9somHbYdLTJjz4uYr7vDfAdjPPsvEvGpL4uo3bFkU13NAm8YLaTEEe7XVTNUqUnK8L3gfVEgFUeiZr4XH"
         ];
         const keyMessage = [
-            {pubkey:"8YrW23vqyzA6f95q6a94yCVDW7kTM1gbqEkAhg9jcmCoQCWGRnJqwBowpZeKpyE6f4jwWAjciW4uTTsPZUfW8s8XqAP5dtiT5Sq14wfrRZgtsi2JnJ6RGjzomZnTsreJ8bzv", 
-                message:"Message for key1"},
-            {pubkey:"79yQ2Ud3y7Y1V1gvTreWRVp8wsABE9NALqodmQqozSpdU6RxEVvoTpYiGEy6y6XPtJp6wZr5nVGKVWkcNj3PPyPay5UoecrgJtGPZfuS6BPncuuPdZRKKkhaMFHp82HAmrKm", 
-                message:"message for key2"},
-            {pubkey:"8WXtwtcDkBL5ubSEg7CREHj4ZCrtUbZfHwRVVp39E27mS91NXQC9somHbYdLTJjz4uYr7vDfAdjPPsvEvGpL4uo3bFkU13NAm8YLaTEEe7XVTNUqUnK8L3gfVEgFUeiZr4XH", 
-                message:"msg 4 key3"},
+            {
+                pubkey: "8YrW23vqyzA6f95q6a94yCVDW7kTM1gbqEkAhg9jcmCoQCWGRnJqwBowpZeKpyE6f4jwWAjciW4uTTsPZUfW8s8XqAP5dtiT5Sq14wfrRZgtsi2JnJ6RGjzomZnTsreJ8bzv",
+                message: "Message for key1"
+            },
+            {
+                pubkey: "79yQ2Ud3y7Y1V1gvTreWRVp8wsABE9NALqodmQqozSpdU6RxEVvoTpYiGEy6y6XPtJp6wZr5nVGKVWkcNj3PPyPay5UoecrgJtGPZfuS6BPncuuPdZRKKkhaMFHp82HAmrKm",
+                message: "message for key2"
+            },
+            {
+                pubkey: "8WXtwtcDkBL5ubSEg7CREHj4ZCrtUbZfHwRVVp39E27mS91NXQC9somHbYdLTJjz4uYr7vDfAdjPPsvEvGpL4uo3bFkU13NAm8YLaTEEe7XVTNUqUnK8L3gfVEgFUeiZr4XH",
+                message: "msg 4 key3"
+            },
         ];
         //
-        [overlayCanvas , signatureOut] = await stampEmbedSignDestination(imageInput, passphrase.value, defaultMessage, keyMessage);
+        [overlayCanvas, signatureOut] = await stampEmbedSignDestination(imageInput, passphrase.value, defaultMessage, keyMessage);
         await writeMessageOutput(embedTextOutput, signatureOut)
         await displaySave(overlayCanvas);
         console.log("End of stampEmbedSignDestination() function.")
     });
 
-/** Extract Functions (Placeholder)
- * 
- */
+    /** Extract Functions (Placeholder)
+     * 
+     */
     // Uploaded image to check for extractable contents
     const imageInputExtract = document.getElementById("imageInputExtract");
+    //Event listener for status change in file upload. 
+    imageInputExtract.addEventListener("change", uploadImage)
     // Password field
     const passwordExtract = document.getElementById("passwordExtract");
     // Signer public key field
@@ -241,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Output Private message field
     const extractPrivTextOutput = document.getElementById("extractPrivTextOutput");
     // The extracted signature from the image. 
-        // readSign = NOT WORKING AS INTENDED. Signature is not in the image. Can upload to verify. 
+    // readSign = NOT WORKING AS INTENDED. Signature is not in the image. Can upload to verify. 
     var readSign = null;
     // The message extracted from the image. 
     var extractedMessage = null;
@@ -249,27 +254,31 @@ document.addEventListener("DOMContentLoaded", function () {
     var extractedUniqueMsg = null;
 
     // Extract the signature from uploaded content [images currently]. Verify a signature
-    document.getElementById("extractSign").addEventListener("click", function () {
+    // Doesnt work as intended as the image doesnt hold the signature.
+    document.getElementById("extractSign").addEventListener("click", async function () {
         alert("Extract Signature function to be implemented!");
-        readSign = extractSign(imageInputExtract);  // returns extracted signature.
+        readSign = await extractSign(imageInputExtract);  // returns extracted signature.
         // write signature to message box
         writeMessageOutput(signTextOutput, readSign);
     });
     // Extract a hidden file from uploaded content. 
-    document.getElementById("extractPassword").addEventListener("click", function () {
+    document.getElementById("extractPassword").addEventListener("click", async function () {
         alert("Extract Password + Message function to be implemented!");
-        extractedMessage = extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
+        extractedMessage = await extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
         // write password extracted message to message box
         writeMessageOutput(extractTextOutput, extractedMessage);
         return extractedMessage;
+        // Dont think we need a return value.
     });
     // Extract a hidden file for specific destination key.
-    document.getElementById("extractPrivateKey").addEventListener("click", function () {
+    document.getElementById("extractPrivateKey").addEventListener("click", async function () {
         alert("Extract Password + Message + Private Key function to be implemented!");
-        extractedUniqueMsg  = extractUnique(imageInputExtract, privKey); // returns the extracted message if it exists. 
+        extractedUniqueMsg = await extractUnique(imageInputExtract, privKey); // returns the extracted message if it exists. 
         // write sign message to message box
         writeMessageOutput(extractPrivTextOutput, extractedUniqueMsg);
         return extractedUniqueMsg;
+        // Dont think we need a return value.
+
     });
 
     // Default View

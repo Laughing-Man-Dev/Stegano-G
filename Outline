@@ -22,11 +22,14 @@
 │   ├── /utils/                # Utility functions (encryption, decryption, etc.)
 │   │   ├── steganography.js   # LSB steganography functions [StegTools]
 │   │   ├── helper.js          # Repeatable, helper, and  functions
+│   │   ├── imageLoading.js    # Load, save, display images.
+│   │   ├── imageOverlay.js    # Create overlays and return new canvas.
 │   │   └── keypair.js         # Functions for keypair management [KeyTools]
 │   │
 │   └── /tests/                # Unit tests (if needed for functionality)
-│       └── <ASSOCIATED_SCRIPT_NAME>.test.js  # Tests for each of the functionalities
-│       └── images             # Image folder for testing
+│       ├── <ASSOCIATED_SCRIPT_NAME>.test.js  # Tests for each of the functionalities
+│       ├── images             # Images for testing
+│       └── testing_keys       # Keys used for testing
 │
 ├── manifest.json              # Extension manifest for browser
 ├── README.md                  # Documentation for the extension

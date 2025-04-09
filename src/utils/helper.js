@@ -22,8 +22,8 @@
 // Imports from utils folder
 import { encrypt, decrypt, embed, extract } from "./steganography.js";
 import { sign, getPubkey, base58Encode } from "./keypairs.js";
-// Not yet implemented imports
 import { saveImage } from "./imageLoading.js";
+// overlayImage not yet implemented. 
 import { overlayText, overlayImage, displayUpdate, createOverlay } from "./imageOverlay.js";
 
 
@@ -94,11 +94,8 @@ export async function signature(inputFile) {
  * Each return value should be at least a canvas and any other return value. 
  */
 
-
 /**
  * Stamps an image with the in use public key as base58 output.
- * @param {HTMLCanvasElement} image - canvas in the uploaded file.
- * @param {string} text - By default calls pubkey() to get the active public key in base58.
  * @returns {HTMLCanvasElement} - Returns a canvas element with the changes. 
  */
 export async function stampPublicKey() {
@@ -114,9 +111,8 @@ export async function stampPublicKey() {
 
 /**
  * Stamps and signs an image without embedding data.
- * @param {HTMLImageElement} image - The image to stamp and sign.
  * @returns {Promise<HTMLCanvasElement>} - The stamped and signed image.
- * @returns {string} - The signed output of the canvas in base58.
+ * @returns {Promise<string>} - The signed output of the canvas in base58.
  */
 export async function stampSign() {
     // Calls stampPublicKey to return a newly created canvas object. Based on the uploaded image. 
@@ -132,7 +128,7 @@ export async function stampSign() {
  * Stamps, signs, and embeds a message with a password into the image. 
  * @param {string} password - The password for encryption.
  * @param {string} message - The message to embed.
- * @returns {Promise<HTMLCanvasElement>} - The processed image.
+ * @returns {Promise<HTMLCanvasElement>} - The final processed image.
  * @returns {Promise<string>} - The signed output of the final image in base58. 
  */
 export async function stampEmbedSign(password, message) {
@@ -159,6 +155,7 @@ export async function stampEmbedSign(password, message) {
  * @param {string} defaultMessage - The default message for password-only access.
  * @param {Array<{pubkey: string, message: string}>} recipients - List of recipient public keys and messages.
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
+ * @returns {Promise<string>} - The signed output in base58.
  * 
  * Change order of operations: stamp, encrypt, embed, then sign final canavs output.  
  * Not exactly correct at this current time. The messages for each destination is no different it is 
@@ -226,8 +223,7 @@ export async function embedAnonymous(image, message, password) {
 
 /**
  * EXTRACT FUNCTIONS
- * 
- * These functions should extract data and return a value in plain text for the user to read. 
+ * These functions extract data and return a value in plain text for the user to read. 
  */
 
 /**
@@ -236,11 +232,12 @@ export async function embedAnonymous(image, message, password) {
  * @returns {Promise<string>} - The extracted signature.
  * 
  * Currently not implemented as intended as the sign 
- * is only generated not attached to the actual image.
+ * is only generated not attached to the actual image. 
+ * So it cannot be extracted from the image currently.
  */
 export async function extractSign(image) {
     const extractedData = extract(image);
-    // Signature verification logic should be added here.
+    // Signature verification logic should be added here. Returning a TRUE valid or FALSE invalid statement.
     return extractedData;
 }
 
