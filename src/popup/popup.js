@@ -6,9 +6,13 @@ import {
     stampPublicKey,
     displaySave,
 } from "../utils/helper.js";
-import { uploadImage, saveImage } from "../utils/imageLoading.js";
+import { uploadImage, saveImage, uploadImageExtract } from "../utils/imageLoading.js";
 import { overlayText, displayUpdate } from "../utils/imageOverlay.js";
-import { sign, keypairGen, keypairSave, keypairLoad, base58Encode } from "../utils/keypairs.js";
+//import { sign, keypairGen, keypairSave, keypairLoad, base58Encode } from "../utils/keypairs.js";
+
+// Replace keypairs with keyManagement
+import { keypairGen, keypairLoad, keypairSave, sign, verify } from "../utils/keyManagement.js"
+
 
 document.addEventListener("DOMContentLoaded", function () {
     // Views
@@ -76,14 +80,32 @@ document.addEventListener("DOMContentLoaded", function () {
     /* Key Management Functions (Placeholder for now)
         * 
         */
-    var keypair = null;
-    var publicKey = null;
+    var signingKeypair, signingPrivateKey, signingPublicKey;
+    var encryptionKeypair, encryptionPrivateKey, encryptionPublicKey;
+    var keypairSet = {
+        signing:[],
+        encryption:[],
+        };
+        // // use as keypairSet.signing[INDEX] 
+        // // 0- signingKeypair 1- signingPrivateKey 2- signingPublicKey
+        // signing:[signingKeypair, signingPrivateKey, signingPublicKey],
+        // // use as keypairSet.encryption[INDEX] 
+        // // 0- encryptionKeypair 1- encryptionPrivateKey 2- encryptionPublicKey
+        // encryption:[encryptionKeypair, encryptionPrivateKey, encryptionPublicKey]
+
 
     // Generate keypair.
-    document.getElementById("generateKey").addEventListener("click", function () {
-        keypair = keypairGen()
+    document.getElementById("generateKey").addEventListener("click", async function () {
+        console.log("Generating New Keys.");
+        keypairSet = await keypairGen();
+        signingKeypair = keypairSet.signing[0];
+        console.log(signingKeypair);
+        encryptionKeypair = keypairSet.encryption[0];
+        console.log(encryptionKeypair);
+        keypairSet.signing.push(signingKeypair);
+        keypairSet.encryption.push(encryptionKeypair);
         alert("Saved in cache Save Key to keep.");
-        return keypair;
+        return {keypairSet, signingKeypair, encryptionKeypair};
     });
     // Load keypair to web extension.
     document.getElementById("loadKey").addEventListener("click", function () {
@@ -93,12 +115,18 @@ document.addEventListener("DOMContentLoaded", function () {
             // Handle the file upload logic here
             console.log('Selected file:', file);
             keypairLoad(file); // .json file
-            keypair = file;
+            keypairSet = file;
             alert("Loading KeyPair");
-            return keypair;
+            return keypairSet;
         } else {
             alert('Please upload a file.');
         }
+        signingKeypair = keypairSet.signing[0];
+        encryptionKeypair = keypairSet.encryption[0];
+        keypairSet.signing.push(signingKeypair);
+        keypairSet.encryption.push(encryptionKeypair);
+        alert("Saved in cache Save Key to keep.");
+        return {keypairSet, signingKeypair, encryptionKeypair};
 
     });
     // Save keypair.
@@ -109,12 +137,27 @@ document.addEventListener("DOMContentLoaded", function () {
         // return savekeypair;
     });
     // Show current key. Used to get public key [stamp, share etc.]
+    // SOON TO UPTATE TO USE FINGER PRINT.
     document.getElementById("showInUseKey").addEventListener("click", async function () {
         let keyElement = document.getElementsByClassName("publicKey");
-        publicKey = await pubkey();
-        writeMessageOutput(keyElement, publicKey);
+
+        signingPrivateKey = keypairSet.signing[0].privateKey;
+        encryptionPrivateKey = keypairSet.encryption[0].privateKey;
+        console.log("Private key for signing: " + signingPrivateKey );
+        console.log("Private Key for encryption: " + encryptionPrivateKey );
+        
+        signingPublicKey = await keypairSet.signing[0].publicKey;
+        encryptionPublicKey = await keypairSet.encryption[0].publicKey;
+        console.log("Public key for signing: " + signingPublicKey );
+        console.log("Public Key for encryption: " + encryptionPublicKey );
+
+
+
+        await writeMessageOutput(keyElement, "sign: " + signingPublicKey + 
+              + "encrypt: " + encryptionPublicKey);
+
         // alert("Show In-Use Key function to be implemented!");
-        return publicKey;
+        return {signingPublicKey, encryptionPublicKey, signingPrivateKey, encryptionPrivateKey};
     });
 
     /** Embed Functions 
@@ -123,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Get File [image] input field from HTML
     const imageInput = document.getElementById("imageInput")
     //Event listener for status change in file upload. 
-    imageInput.addEventListener("change", uploadImage)
+    //imageInput.addEventListener("change", uploadImage(this.onchange, imageInput, myCanvas))
     // Get Canvas from HTML
     const myCanvas = document.getElementById("myCanvas");
     // Get password input field 
@@ -142,6 +185,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var signatureOut = null;
     // Array to hold the outputs of multiple return values. 
     var returnArray = [overlayCanvas, signatureOut];
+
+    //Event listener for status change in file upload. 
+    imageInput.addEventListener("change", uploadImage)
+  
 
     // Sign the content [images currently] with your private key.
     // sign logic needs to be updated but is working as intended to generate a sign message output text.
@@ -232,7 +279,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Uploaded image to check for extractable contents
     const imageInputExtract = document.getElementById("imageInputExtract");
     //Event listener for status change in file upload. 
-    imageInputExtract.addEventListener("change", uploadImage)
+    imageInputExtract.addEventListener("change", uploadImageExtract);
+    // Canvas to manipulate. A div element of canvas call the image element to use.
+        // Use extractCanvas.imageCanvas
+    const extractCanvas = document.getElementById("extractCanvas");
     // Password field
     const passwordExtract = document.getElementById("passwordExtract");
     // Signer public key field
@@ -253,18 +303,22 @@ document.addEventListener("DOMContentLoaded", function () {
     // The Unique message extracted.
     var extractedUniqueMsg = null;
 
+    
+
+
     // Extract the signature from uploaded content [images currently]. Verify a signature
-    // Doesnt work as intended as the image doesnt hold the signature.
+    // Doesnt work as intended as the image doesnt hold the signature currently.
     document.getElementById("extractSign").addEventListener("click", async function () {
         alert("Extract Signature function to be implemented!");
-        readSign = await extractSign(imageInputExtract);  // returns extracted signature.
+        readSign = await extractSign(extractCanvas.imageCanvas);  // returns extracted signature. 
+        // Doesnt actually have a signature embedded to extract.
         // write signature to message box
         writeMessageOutput(signTextOutput, readSign);
     });
     // Extract a hidden file from uploaded content. 
     document.getElementById("extractPassword").addEventListener("click", async function () {
         alert("Extract Password + Message function to be implemented!");
-        extractedMessage = await extractAnonymous(imageInputExtract, passwordExtract); // returns decrypted string.
+        extractedMessage = await extractAnonymous(extractCanvas.imageCanvas, passwordExtract.value); // returns decrypted string.
         // write password extracted message to message box
         writeMessageOutput(extractTextOutput, extractedMessage);
         return extractedMessage;
@@ -273,8 +327,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Extract a hidden file for specific destination key.
     document.getElementById("extractPrivateKey").addEventListener("click", async function () {
         alert("Extract Password + Message + Private Key function to be implemented!");
-        extractedUniqueMsg = await extractUnique(imageInputExtract, privKey); // returns the extracted message if it exists. 
-        // write sign message to message box
+        extractedUniqueMsg = await extractUnique(extractCanvas.imageCanvas, privKey.value); // returns the extracted message if it exists. 
+        // write unique message to message box
         writeMessageOutput(extractPrivTextOutput, extractedUniqueMsg);
         return extractedUniqueMsg;
         // Dont think we need a return value.

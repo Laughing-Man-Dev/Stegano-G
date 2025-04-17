@@ -7,8 +7,10 @@
  *      - extract()
  * 
  * Functions:
+ * USE: keypairSet.signing
  * - encrypt(): Encrypts messages for secure storage.
  * - decrypt(): Decrypts messages using a password or private key.
+ * 
  * - embed(): Hides encrypted data into an image using LSB steganography.
  * - extract(): Retrieves and decrypts hidden messages from an image.
  * 
@@ -17,11 +19,16 @@
  * https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas 
 */
 
+import { getPubkeys, getPrivkeys } from "./keyManagement";
 
+let pubKey = {signingPK, encryptionPK} = getPubkeys();
+console.log("geting public keys");
+let secretKey = {signingSK, encryptionSK} = getPrivkeys();
+console.log("geting private keys");
 /**
  * Encrypts a message using AES-GCM.
  * @param {string} message - The message to encrypt.
- * @param {string} password - The password for encryption.
+ * @param {string} recieversPubKey - The public key of the user who should have the private key to open.
  * @returns {Promise<string>} - The encrypted message in base64 format.
  *
  * Description:
@@ -34,36 +41,34 @@
  * 
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa
  */
-export async function encrypt(message, password) {
+export async function encrypt(message, recieversPubKey, password= null) {
     // Create a text encoder to convert the message string into a Uint8Array, which is required for the Web Crypto API.
     const encoder = new TextEncoder();
+    const encodedMsg = encoder.encode(message);
+    const encodedMsgLength = new Uint8Array(encodedMsg.length);
   
-    // Derive the encryption key from the password using SHA-256.  Note: This is NOT a secure KDF.
-    const keyMaterial = await crypto.subtle.digest("SHA-256", encoder.encode(password));
+    crypto.subtle.encrypt({name: "RSA-AOEP",}, recieversPubKey, encodedMsg);
+    // Encrypt the message using the AES-GCM algorithm. The encoded messsage length is used as the IV.
+    const encrypted = await crypto.subtle.encrypt({ name: "RSA-OAEP"}, recieversPubKey, encodedMsg);
   
-    // Import the raw key material to create a CryptoKey object.  This object is what the Web Crypto API uses for encryption.
-    // The key is restricted to the 'encrypt' operation.
-    const key = await crypto.subtle.importKey("raw", keyMaterial, { name: "AES-GCM" }, false, ["encrypt"]);
+    // Combine the message length and the encrypted ciphertext into a single Uint8Array for easier handling.
+    const combinedData = new Uint8Array(encodedMsgLength + encrypted.byteLength);
+    combinedData.set(encodedMsgLength, 0); // Copy the message length to the beginning of the combined array.
+    combinedData.set(new Uint8Array(encrypted), encodedMsgLength); // Copy the ciphertext after the message length.
   
-    // Generate a cryptographically secure, random initialization vector (IV).  A 12-byte IV is recommended for AES-GCM.
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-  
-    // Encrypt the message using the AES-GCM algorithm.  The IV is provided in the algorithm parameter.
-    const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(message));
-  
-    // Combine the IV and the encrypted ciphertext into a single Uint8Array for easier handling.
-    const combinedData = new Uint8Array(iv.byteLength + encrypted.byteLength);
-    combinedData.set(iv, 0); // Copy the IV to the beginning of the combined array.
-    combinedData.set(new Uint8Array(encrypted), iv.byteLength); // Copy the ciphertext after the IV.
-  
-    // Return the combined data (IV + ciphertext) as a base64-encoded string.
-    return btoa(String.fromCharCode(...combinedData));
+    // Return the combined data (encoded message length + ciphertext) as a base64-encoded string.
+    const result = btoa(String.fromCharCode(...combinedData));
+    console.log("results of the encrypted message" + result);
+    const resultsBin = new Uint8Array(result);
+    console.log("results of binary output for emdedding." + resultsBin);
+    return resultsBin;
   }
   
   /**
    * Decrypts a message using AES-GCM.
    * @param {string} encryptedMessage - The base64-encoded, encrypted message.
-   * @param {string} password - The password used for encryption.
+   * @param {string} receiversPrivateKey - The key used to attempt to decrypt the message.
+   * @param {string} password - The input password defaults to null.
    * @returns {Promise<string>} - The decrypted message as a string.
    *
    * Description:
@@ -73,7 +78,7 @@ export async function encrypt(message, password) {
    * uses the Web Crypto API to decrypt the ciphertext using AES-GCM and the derived key and IV.  Finally, it decodes the
    * decrypted Uint8Array into a human-readable string.
    */
-  export async function decrypt(encryptedMessage, password) {
+  export async function decrypt(encryptedMessage, receiversPrivateKey, password = null) {
     // Decode the base64-encoded encrypted message into a Uint8Array.  This gets the combined IV and ciphertext.
     const binaryData = Uint8Array.from(atob(encryptedMessage), c => c.charCodeAt(0));
   
@@ -81,7 +86,7 @@ export async function encrypt(message, password) {
     const iv = binaryData.slice(0, 12);
   
     // Extract the encrypted data (ciphertext) from the remaining part of the binary data.
-    const encryptedData = binaryData.slice(12);
+    const encryptedDataLength = binaryData.slice(12);
   
     // Create a text encoder.  Although not used in this function, it's good practice to keep it consistent.
     const encoder = new TextEncoder();
@@ -90,7 +95,7 @@ export async function encrypt(message, password) {
     const keyMaterial = await crypto.subtle.digest("SHA-256", encoder.encode(password));
   
     // Import the key material to create a CryptoKey object for decryption.  The key is restricted to the 'decrypt' operation.
-    const key = await crypto.subtle.importKey("raw", keyMaterial, { name: "AES-GCM" }, false, ["decrypt"]);
+    const key = sendersPublicKey();
   
     // Decrypt the ciphertext using AES-GCM with the derived key and the extracted IV.
     const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedData);
@@ -131,14 +136,34 @@ export async function encrypt(message, password) {
     let binaryData = Array.from(new TextEncoder().encode(data)).map(byte => byte.toString(2).padStart(8, '0')).join('');
     let dataIndex = 0;
   
-    // Iterate through the pixel data, modifying the LSBs.  The loop increments by 4 because each pixel has 4 values (R, G, B, A).
+    // Iterate through the pixel data, modifying the LSBs.  
+// The loop increments by 4 because each pixel has 4 values (R, G, B, A).
     for (let i = 0; i < imgData.data.length; i += 4) {
-      if (dataIndex < binaryData.length) {
-        // Modify the LSB of the red, green, and blue components.
-        imgData.data[i] = (imgData.data[i] & 0xFE) | parseInt(binaryData[dataIndex], 2); // Red
-        dataIndex++;
-      }
+        if (dataIndex < binaryData.length) {
+            // Modify the LSB of the red, green, and blue components.
+            imgData.data[i] = (imgData.data[i] & 0xFE) | parseInt(binaryData[dataIndex], 2); // Red
+            dataIndex++;
+        }
+        if (dataIndex < binaryData.length) {
+            // Modify the LSB of the green component.
+            imgData.data[i + 1] = (imgData.data[i + 1] & 0xFE) | parseInt(binaryData[dataIndex], 2); // Green
+            dataIndex++;
+        }
+        if (dataIndex < binaryData.length) {
+            // Modify the LSB of the blue component.
+            imgData.data[i + 2] = (imgData.data[i + 2] & 0xFE) | parseInt(binaryData[dataIndex], 2); // Blue
+            dataIndex++;
+        }
+        // // You can choose whether or not to embed data in the alpha channel.
+        // // Modifying the alpha channel might have visual implications depending on
+        // // how the image is rendered. If you do want to use it:
+        // if (dataIndex < binaryData.length) {
+        //     imgData.data[i + 3] = (imgData.data[i + 3] & 0xFE) | parseInt(binaryData[dataIndex], 2); // Alpha
+        //     dataIndex++;
+        // }
     }
+    
+
   
     // Put the modified image data back onto the canvas.  This updates the canvas with the steganographically encoded data.
     ctx.putImageData(imgData, 0, 0);
@@ -172,14 +197,20 @@ export async function encrypt(message, password) {
     for (let i = 0; i < imgData.data.length; i += 4) {
       binaryData += (imgData.data[i] & 1).toString(); // Extract the LSB of the Red channel.
     }
+    {
+      binaryData += (imgData.data[i+1] & 1).toString(); // Extract the LSB of the Green channel.
+    }
+    {
+      binaryData += (imgData.data[i+2] & 1).toString(); // Extract the LSB of the Blue channel.
+    }
+    // {
+    //   binaryData += (imgData.data[i+3] & 1).toString(); // Extract the LSB of the Alpha channel.
+    // }
   
     // Group the binary data into 8-bit bytes and convert them to decimal values.
-    const byteData = binaryData.match(/.{8}/g).map(byte => parseInt(byte, 2));
-    
-    // Returning the bytecode data to be parsed. 
-    return byteData;
+    const byteData = binaryData.match(/.{8}/g).map(byte => parseInt(byte, 2)); 
 
     // Decode the byte data into a string using TextDecoder.
-    //return new TextDecoder().decode(new Uint8Array(byteData));
+    return new TextDecoder().decode(new Uint8Array(byteData));
   }
   

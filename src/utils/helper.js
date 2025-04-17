@@ -21,10 +21,22 @@
 
 // Imports from utils folder
 import { encrypt, decrypt, embed, extract } from "./steganography.js";
-import { sign, getPubkey, base58Encode } from "./keypairs.js";
+import { sign, verify, 
+    getPrivkeySigning, getPrivkeyEncryption, 
+    getPubkeySigning, getPubkeyEncryption, 
+    fingerprintPubKeySign, signFingerprint, verifyFingerprint,
+    fingerprintPubKeyEncrypt, base58Encode
+ } from "./keyManagement.js";
 import { saveImage } from "./imageLoading.js";
 // overlayImage not yet implemented. 
 import { overlayText, overlayImage, displayUpdate, createOverlay } from "./imageOverlay.js";
+
+// Public keys 
+var signingPK;
+var encryptionPK; 
+// Private Keys
+var signingSK;
+var encryptionSK; 
 
 
 /**
@@ -35,7 +47,14 @@ import { overlayText, overlayImage, displayUpdate, createOverlay } from "./image
 export async function pubkey() {
     // Returns a base58 encoded version of the public key. 
     // Used till we implement fingerprints.
-    return base58Encode(await getPubkey());
+    ///return base58Encode(await getPubkey());
+    // Private Keys intialized.
+    signingSK = await getPrivkeySigning();
+    encryptionSK = await getPrivkeyEncryption();
+    // Public Key initialized
+    signingPK = await getPubkeySigning();
+    encryptionPK = await getPubkeyEncryption();
+    return {signingSK, encryptionSK, signingSK ,signingPK}
 }
 
 
@@ -50,7 +69,7 @@ export async function writeMessageOutput(elementID, msg) {
     const elements = elementID;
     // Writes message/text to the html
     elements.innerHTML = msg;
-    console.log("Writing: " + msg);
+    console.log("Writing in HTML: " + msg);
     // types out each letter
     for (let i = 0; i < elements.length; i++) {
         elements[i].innerHTML = msg;
@@ -85,6 +104,7 @@ export async function signature(inputFile) {
     // Converts the results to a human readable base58 encoding.
     let base58Results = base58Encode(signResults);
     console.log("Signature base58 output: " + base58Results);
+    console.log("Still using BASE 58 NEEDS UPDATED.")
     return base58Results; // , signResults;  // maybe return both values?
 }
 
@@ -99,8 +119,10 @@ export async function signature(inputFile) {
  * @returns {HTMLCanvasElement} - Returns a canvas element with the changes. 
  */
 export async function stampPublicKey() {
-    // calls pubkey and returns a base58 public key.
-    let text = await pubkey();
+    // calls pubkey and returns a base58 public key.;
+    let e = await fingerprintPubKeySign(new Uint8Array(signingPK));
+    let text = base58Encode(e);
+    
     console.log("text to be stamped: " + text);
     // Creates a canvas with the provided text [Public Key] overlayed. Based on the uploaded image. 
     let canvas = await overlayText(text);
@@ -214,8 +236,12 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
  */
 export async function embedAnonymous(image, message, password) {
+    console.log("The image: " + image);
+    console.log("The message: " + message);
+    console.log("The password: " + password);
     let canvas = image;
     canvas = await createOverlay();
+    console.log("Created overlay canvas for embedding message");
     const encryptedMessage = await encrypt(message, password);
     console.log("The encrypted message embeded in the canvas: " + encryptedMessage);
     return await embed(canvas, encryptedMessage);
@@ -236,6 +262,7 @@ export async function embedAnonymous(image, message, password) {
  * So it cannot be extracted from the image currently.
  */
 export async function extractSign(image) {
+    console.log("Your image file: " + image);
     const extractedData = extract(image);
     // Signature verification logic should be added here. Returning a TRUE valid or FALSE invalid statement.
     return extractedData;
@@ -248,10 +275,15 @@ export async function extractSign(image) {
  * @returns {Promise<string>} - The extracted message.
  */
 export async function extractUnique(image, privateKey) {
+    console.log("Your image file: " + image);
+    console.log("Your privateKey input: " + privateKey);
     const extractedData = extract(image);
+    console.log("The extracted data: " + extractedData);
     const dataObject = JSON.parse(extractedData);
+    console.log("The data object to be read:" + dataObject)
     for (const recipient of dataObject.recipients) {
         if (recipient.pubkey === privateKey) {
+            console.log("Checking to see if you key matches an output.");
             return await decrypt(recipient.message, privateKey);
         }
     }
@@ -266,7 +298,15 @@ export async function extractUnique(image, privateKey) {
  * @returns {Promise<string>} - The extracted message.
  */
 export async function extractAnonymous(image, password) {
+    console.log("Your image file: " + image);
+    console.log("Your password input: " + password);
     const extractedData = extract(image);
-    const dataObject = JSON.parse(extractedData);
+    console.log("The extracted data: " + extractedData);
+    console.log(typeof extractedData);
+    //const dataObject = JSON.parse(extractedData);
+    const dataObject = new Uint8ClampedArray(extractedData)
+    
+    console.log("The data object to be read: " + dataObject);
+    console.log(typeof dataObject); 
     return await decrypt(dataObject.default.message, password);
 }
