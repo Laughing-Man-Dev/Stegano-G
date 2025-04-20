@@ -18,7 +18,6 @@ export function uploadImage(event) {
     // Update for more modularity in the future.
   const myCanvas = document.getElementById('myCanvas');
 
-
   // Check if a file has been selected in the image input.
   // 'imageInput.files' is a FileList object containing the selected file(s).
   // 'imageInput.files[0]' refers to the first selected file.

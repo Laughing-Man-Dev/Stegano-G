@@ -1,12 +1,17 @@
 import {
-writeMessageOutput, displaySave, // Helper functions.
-signature, // use the one in SigningKeys?
-stamp, stampSign, stampEmbedSign, stampEmbedSignDestination, 
-embedAnonymous, extractAnonymous, 
-extractSign, extractUnique, 
-} from "../utils/helperRebase.js";
+    pubkey, signature, stampSign,
+    embedAnonymous, stampEmbedSign, stampEmbedSignDestination,
+    extractSign, extractAnonymous, extractUnique,
+    writeMessageOutput,
+    stampPublicKey,
+    displaySave,
+} from "../utils/helper.js";
 import { uploadImage, saveImage, uploadImageExtract } from "../utils/imageLoading.js";
-import { Keys, KeyManager, SigningKeys, EncryptionKeys, Fingerprints} from "../utils/keyManagementClassRebase.js"
+import { overlayText, displayUpdate } from "../utils/imageOverlay.js";
+//import { sign, keypairGen, keypairSave, keypairLoad, base58Encode } from "../utils/keypairs.js";
+
+// Replace keypairs with keyManagement
+import { keypairGen, keypairLoad, keypairSave, sign, verify } from "../utils/keyManagement.js"
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -75,62 +80,58 @@ document.addEventListener("DOMContentLoaded", function () {
     /* Key Management Functions (Placeholder for now)
         * 
         */
-    var signingkeys= null; //USE: = new SigningKey(keypair);
-    var encryptionkeys= null; //USE: = new EncryptionKey(keypair);
-    var keyManager; //USE: = new KeyManager(signingkeys, encryptionkeys);  //new KeyManager(new SigningKeys(), new EncryptionKeys())
+    var signingKeypair, signingPrivateKey, signingPublicKey;
+    var encryptionKeypair, encryptionPrivateKey, encryptionPublicKey;
+    var keypairSet = {
+        signing:[],
+        encryption:[],
+        };
+        // // use as keypairSet.signing[INDEX] 
+        // // 0- signingKeypair 1- signingPrivateKey 2- signingPublicKey
+        // signing:[signingKeypair, signingPrivateKey, signingPublicKey],
+        // // use as keypairSet.encryption[INDEX] 
+        // // 0- encryptionKeypair 1- encryptionPrivateKey 2- encryptionPublicKey
+        // encryption:[encryptionKeypair, encryptionPrivateKey, encryptionPublicKey]
 
-    // Generate keypairs.
+
+    // Generate keypair.
     document.getElementById("generateKey").addEventListener("click", async function () {
         console.log("Generating New Keys.");
-        keyManager = new KeyManager(null, null); // sets KeyManager to null so new keys will be generated.
-// leave await calls for console.log testing.
-    // Signing
-        let r = await new SigningKeys(); // auto generates the value if null 
-        console.log("Sign keys Generated: " + r);
-        signingkeys = await new SigningKeys(r);
-        // console.log("Sign keys keypair: " + signingkeys.signKeypair);
-        // console.log("Sign key private: " + signingkeys.signPrivateKey);
-        // console.log("Sign key public: " + signingkeys.signPublicKey);
-    // Encyption
-        let r2 = await new EncryptionKeys(); // auto generates the value if null
-        console.log("Encrypt keys Generated: " + r);
-        encryptionkeys = await new EncryptionKeys(r2);
-        // console.log("Encrypt keys keypair: " + encryptionkeys.encryptKeypair);
-        // console.log("Encrypt key private: " + encryptionkeys.encryptPrivateKey);
-        // console.log("Encrypt key public: " + encryptionkeys.encryptPublicKey);
-    // Assign KeyManager
-        keyManager = new KeyManager(signingkeys,encryptionkeys)
-        return {signingkeys, encryptionkeys, keyManager};
+        keypairSet = await keypairGen();
+        signingKeypair = keypairSet.signing[0];
+        console.log(signingKeypair);
+        encryptionKeypair = keypairSet.encryption[0];
+        console.log(encryptionKeypair);
+        keypairSet.signing.push(signingKeypair);
+        keypairSet.encryption.push(encryptionKeypair);
+        alert("Saved in cache Save Key to keep.");
+        return {keypairSet, signingKeypair, encryptionKeypair};
     });
     // Load keypair to web extension.
-    document.getElementById("loadKey").addEventListener("click", async function () {
+    document.getElementById("loadKey").addEventListener("click", function () {
         const fileInput = document.getElementById('privateKeyUpload');
         const file = fileInput.files[0];
-        let uploadedkeys;
         if (file) {
             // Handle the file upload logic here
             console.log('Selected file:', file);
-            //let manageKeys = new KeyManager(null, null);
+            keypairLoad(file); // .json file
+            keypairSet = file;
             alert("Loading KeyPair");
-            uploadedkeys = new KeyManager(null,null);
-            uploadedkeys = await uploadedkeys.keypairLoad(file);
-            console.log("uploadkeys: ", uploadedkeys);
-            signingkeys = new SigningKeys(uploadedkeys.SigningKeys);
-            console.log(signingkeys);
-            encryptionkeys = new EncryptionKeys(uploadedkeys.EncryptionKeys);
-            console.log(encryptionkeys);
-            alert("Saved in cache Save Key to keep.");
-            keyManager = uploadedkeys;
-            return {signingkeys, encryptionkeys, keyManager};
+            return keypairSet;
         } else {
             alert('Please upload a file.');
         }
+        signingKeypair = keypairSet.signing[0];
+        encryptionKeypair = keypairSet.encryption[0];
+        keypairSet.signing.push(signingKeypair);
+        keypairSet.encryption.push(encryptionKeypair);
+        alert("Saved in cache Save Key to keep.");
+        return {keypairSet, signingKeypair, encryptionKeypair};
+
     });
     // Save keypair.
     document.getElementById("saveKey").addEventListener("click", function () {
-        let savekeypair = new KeyManager(signingkeys, encryptionkeys);
-        console.log(savekeypair);
-        savekeypair.keypairSave();
+        let savekeypair = keypairSave();
         console.log("keypair saved. upload to use in the future.");
         alert("Downloading keypair: " + savekeypair);
         // return savekeypair;
@@ -140,17 +141,23 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("showInUseKey").addEventListener("click", async function () {
         let keyElement = document.getElementsByClassName("publicKey");
 
-        console.log("Private key for signing: " + signingkeys.signPrivateKey);
-        console.log("Private Key for encryption: " + encryptionkeys.encryptPrivateKey);
+        signingPrivateKey = keypairSet.signing[0].privateKey;
+        encryptionPrivateKey = keypairSet.encryption[0].privateKey;
+        console.log("Private key for signing: " + signingPrivateKey );
+        console.log("Private Key for encryption: " + encryptionPrivateKey );
         
+        signingPublicKey = await keypairSet.signing[0].publicKey;
+        encryptionPublicKey = await keypairSet.encryption[0].publicKey;
+        console.log("Public key for signing: " + signingPublicKey );
+        console.log("Public Key for encryption: " + encryptionPublicKey );
 
-        console.log("Public key for signing: " +  signingkeys.signPublicKey);
-        console.log("Public Key for encryption: " + encryptionkeys.encryptPublicKey);
 
-        await writeMessageOutput(keyElement, "sign: " + signingkeys.signPublicKey + 
-        "<br>" + "encrypt: " + encryptionkeys.encryptPublicKey );
+
+        await writeMessageOutput(keyElement, "sign: " + signingPublicKey + 
+              + "encrypt: " + encryptionPublicKey);
 
         // alert("Show In-Use Key function to be implemented!");
+        return {signingPublicKey, encryptionPublicKey, signingPrivateKey, encryptionPrivateKey};
     });
 
     /** Embed Functions 
@@ -187,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // sign logic needs to be updated but is working as intended to generate a sign message output text.
     document.getElementById("sign").addEventListener("click", async function () {
         //alert("SignOnly implemented as: working.");
-        signatureOut = await signature(imageInput, signingkeys); // still needs updates. 
+        signatureOut = await signature(imageInput); // still needs updates. 
         // write sign message to message box [Add other features]
         await writeMessageOutput(embedTextOutput, signatureOut);
         console.log("End of sign() function.")
@@ -196,10 +203,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Stamp the content [images currently] with your public key.
     document.getElementById("stamp").addEventListener("click", async function () {
         //alert("Stamp Only implemented as: working as intended");
-        overlayCanvas = await stamp(signingkeys);
+        overlayCanvas = await stampPublicKey();
         console.log("output canvas: " + overlayCanvas)
         await displaySave(overlayCanvas);
-        console.log("End of stamp() function.")
+        console.log("End of stampPublicKey() function.")
     });
     // Embed a message in the content [image] 
     document.getElementById("anonEmbed").addEventListener("click", async function () {
@@ -213,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Stamp the content [images currently] with your public key & sign with your private key.
     document.getElementById("stampSign").addEventListener("click", async function () {
         //alert("Stamp + Sign function to be implemented!");
-        [overlayCanvas, signatureOut] = await stampSign(signingkeys);
+        [overlayCanvas, signatureOut] = await stampSign();
         writeMessageOutput(embedTextOutput, signatureOut)
         await displaySave(overlayCanvas);
         console.log("End of stampSign() function.")
@@ -222,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // use steganography to embed a message sealed with a password.
     document.getElementById("stampEmbed").addEventListener("click", async function () {
         //alert("Working as intended")
-        [overlayCanvas, signatureOut] = await stampEmbedSign(passphrase.value, messageIn.value, signingkeys);
+        [overlayCanvas, signatureOut] = await stampEmbedSign(passphrase.value, messageIn.value);
         writeMessageOutput(embedTextOutput, signatureOut)
         await displaySave(overlayCanvas);
         console.log("End of stampEmbedSign() function.");

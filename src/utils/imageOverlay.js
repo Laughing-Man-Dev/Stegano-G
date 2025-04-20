@@ -3,6 +3,7 @@
 
 /**
  * Creates a canvas element for overlaying content.
+ * add @ param Canvas for modulatrity. ???
  * @returns {HTMLCanvasElement|null} - The overlay canvas or null if an image hasn't been uploaded.
  */
 export async function createOverlay() {
@@ -101,6 +102,7 @@ export function overlayImage(imageUrl, x, y, width, height) {
 export async function displayUpdate(overlayCanvas) {
     // Get the HTML div element with the ID 'myCanvas'.
     const myCanvas = document.getElementById('myCanvas');
+    console.log("From imageOverlay(): ");
     console.log(myCanvas);
     // Check if the 'myCanvas' div has the 'imageCanvas' property (the canvas containing the uploaded image).
     if (!myCanvas.imageCanvas) {

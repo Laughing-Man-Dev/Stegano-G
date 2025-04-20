@@ -21,42 +21,18 @@
 
 // Imports from utils folder
 import { encrypt, decrypt, embed, extract } from "./steganography.js";
-import { sign, verify, 
-    getPrivkeySigning, getPrivkeyEncryption, 
-    getPubkeySigning, getPubkeyEncryption, 
-    fingerprintPubKeySign, signFingerprint, verifyFingerprint,
-    fingerprintPubKeyEncrypt, base58Encode
- } from "./keyManagement.js";
+// import { sign, verify, 
+//     getPrivkeySigning, getPrivkeyEncryption, 
+//     getPubkeySigning, getPubkeyEncryption, 
+//     fingerprintPubKeySign, signFingerprint, verifyFingerprint,
+//     fingerprintPubKeyEncrypt, base58Encode
+//  } from "./keyManagement.js";
+
+import { Keys, SigningKeys, EncryptionKeys, Fingerprints } from "./keyManagementClassRebase.js";
 import { saveImage } from "./imageLoading.js";
 // overlayImage not yet implemented. 
 import { overlayText, overlayImage, displayUpdate, createOverlay } from "./imageOverlay.js";
-
-// Public keys 
-var signingPK;
-var encryptionPK; 
-// Private Keys
-var signingSK;
-var encryptionSK; 
-
-
-/**  REMOVE.
- * Returns a base58 encoded public key. 
- * Asks for the Public key from the keypair in memorey. 
- * @returns {string} - The base58 encoded public key.
- */
-export async function pubkey() {
-    // Returns a base58 encoded version of the public key. 
-    // Used till we implement fingerprints.
-    ///return base58Encode(await getPubkey());
-    // Private Keys intialized.
-    signingSK = await getPrivkeySigning();
-    encryptionSK = await getPrivkeyEncryption();
-    // Public Key initialized
-    signingPK = await getPubkeySigning();
-    encryptionPK = await getPubkeyEncryption();
-    return {signingSK, encryptionSK, signingSK ,signingPK}
-}
-
+import { base58Encode } from "./keyManagement.js";
 
 /**
  * Write text to output message box.
@@ -81,6 +57,7 @@ export async function writeMessageOutput(elementID, msg) {
 
 /** More decriptive name PLEASE
  * Combines the save and display update functions for use in popup.js
+ * Ensures you are saving and showing the same canvas. 
  * @param {HTMLCanvasElement} canvasToSave 
  */
 export async function displaySave(canvasToSave) {
@@ -95,18 +72,22 @@ export async function displaySave(canvasToSave) {
 /**
  * Signs an image with the active private key as the native keypair.privatekey. 
  * @param {HTMLElement} inputFile - The image to sign.
- * @returns {Promise<string>} - The base58 encoded signature output. 
+ * @param {SigningKeys} signingKeys
+ * @returns {Promise<Uint8Array>} - Uint8Array signature output. 
  */
-export async function signature(inputFile) {
+export async function signature(inputFile, signingKeys){
+    let b = new Uint8Array(inputFile);
     // Takes the input file [images currently] and signs using crypto.subtle.sign() returns Array8Byte
-    let signResults = await sign(inputFile);
-    console.log("Signature in Crypto.Keypair.Private: " + signResults);
-    // Converts the results to a human readable base58 encoding.
-    let base58Results = base58Encode(signResults);
-    console.log("Signature base58 output: " + base58Results);
-    console.log("Still using BASE 58 NEEDS UPDATED.")
-    return base58Results; // , signResults;  // maybe return both values?
+    let signOutput = await signingKeys.sign(b); //Returns Uint8Array
+    // Converts the results to a human readable base64 encoding.
+    let base64SignOutput = await signingKeys.arrayBufferToBase64(signOutput);
+    console.log(base64SignOutput); // base64
+    console.log(signOutput); // Uint8Array
+    //for now return
+    return base64SignOutput; // signOutput; Uint8Array
 }
+
+
 
 /**
  * EMBED & SIGN FUNCTIONS
@@ -116,7 +97,8 @@ export async function signature(inputFile) {
 
 /**
  * Stamps an image with the in use public key as base58 output.
- * @returns {HTMLCanvasElement} - Returns a canvas element with the changes. 
+ * @returns {HTMLCanvasElement} - Returns a canvas element with the changes.
+ * 
  */
 export async function stampPublicKey() {
     // calls pubkey and returns a base58 public key.;
@@ -130,17 +112,56 @@ export async function stampPublicKey() {
     // Returns the newly created canvas object.
     return canvas;
 }
+/**
+ * Stamps an image with the in use public key as base64 output.
+ * @param {SigningKeys|EncryptionKeys} keypair - keypair set.
+ * @returns {HTMLCanvasElement} - Returns a canvas element with the changes. 
+ * 
+ * 
+ *     if(keypair == SigningKeys) {
+        text = await keypair.arrayBufferToBase64(this.getSignPublicKey()); // Base 64 output
+        console.log("text to print" + text);
+    }
+    if(keypair == EncryptionKeys) {
+        text = await keypair.arrayBufferToBase64(this.getEncryptPublicKey()); //Base 64 output
+        console.log("text to print" + text);
+    }
+    else{
+        Error("You did not provide a keypair"); 
+        return;
+    }
+ * 
+ * 
+ * 
+ * 
+ */
+export async function stamp(keypair) {
+    let text;
+    let spk = await keypair.exportPublicKey(keypair.signPublicKey);
+    let x, _y;
+    x = spk.x;
+    //_y = spk.y;
+    text = x; //+ _y;
+    console.log("Stamp text: " + text);
+    //text = await keypair.arrayBufferToBase64(new ArrayBuffer(keypair.publicKey));
+    let canvas = await overlayText(text);
+    console.log("current canvas: stamp(): " + canvas );
+    return canvas;
+}
+
+
 
 /**
  * Stamps and signs an image without embedding data.
+ * @param {SigningKeys|EncryptionKeys} keypair - Keypair set.
  * @returns {Promise<HTMLCanvasElement>} - The stamped and signed image.
  * @returns {Promise<string>} - The signed output of the canvas in base58.
  */
-export async function stampSign() {
+export async function stampSign(keypair) {
     // Calls stampPublicKey to return a newly created canvas object. Based on the uploaded image. 
-    let canvas = await stampPublicKey();
+    let canvas = await stamp(keypair);
     // Signs the new canvas and returns a base58 sign output string.
-    let signOutput = await signature(canvas);
+    let signOutput = await signature(canvas, keypair);
     console.log("signature output:" + signOutput);
     // Returns the new canvas object and the signed output text in base58.
     return [canvas, signOutput];
@@ -150,12 +171,13 @@ export async function stampSign() {
  * Stamps, signs, and embeds a message with a password into the image. 
  * @param {string} password - The password for encryption.
  * @param {string} message - The message to embed.
+ * @param {SigningKeys|EncryptionKeys} keypair - Keypair set.
  * @returns {Promise<HTMLCanvasElement>} - The final processed image.
  * @returns {Promise<string>} - The signed output of the final image in base58. 
  */
-export async function stampEmbedSign(password, message) {
+export async function stampEmbedSign(password, message, keypair) {
     // Calls stampPublicKey to return a newly created canvas object. Based on the uploaded image. 
-    let canvas = await stampPublicKey();
+    let canvas = await stamp(keypair);
     console.log("Active Canvas" + canvas);
     // Encrypts the message using the password and returns a base64 encoded string.
     const encryptedMessage = await encrypt(message, password);
@@ -165,7 +187,7 @@ export async function stampEmbedSign(password, message) {
     let finalCanvas = await embed(canvas, encryptedMessage);
     console.log("embeded result canvas: " + finalCanvas);
     // Signs the new canvas and returns a base58 sign output string.
-    let signOutput = await signature(finalCanvas); // Signature output in base58
+    let signOutput = await signature(finalCanvas, keypair); // Signature output in base58
     // Returns the finalCanvas and the sign message output.
     return [finalCanvas, signOutput];
 }
@@ -174,6 +196,7 @@ export async function stampEmbedSign(password, message) {
  * Stamps, signs, and embeds a message for multiple receivers.
  * @param {HTMLImageElement} image - The image to modify.
  * @param {string} password - The password for encryption.
+ * @param {SigningKeys|EncryptionKeys} keypair 
  * @param {string} defaultMessage - The default message for password-only access.
  * @param {Array<{pubkey: string, message: string}>} recipients - List of recipient public keys and messages.
  * @returns {Promise<HTMLCanvasElement>} - The processed image.
@@ -186,20 +209,13 @@ export async function stampEmbedSign(password, message) {
  * NEW FUNCTIONALITY: create download tool where you enter pubkeys of your [TEAM] and it gives you a 
  * formated output and then you can update with unique messages for each reciever. 
  */
-export async function stampEmbedSignDestination(image, password, defaultMessage, recipients) {
+export async function stampEmbedSignDestination(image, password, keypair, defaultMessage, recipients) {
     // Calls stampPublicKey to return a newly created canvas object. Based on the uploaded image.
-    const canvas = await stampPublicKey();
+    const canvas = await stamp(keypair);
     console.log("Active Canvas" + canvas);
     // Encrypts the default message using the password and returns a base64 encoded string.
     const encryptedDefault = await encrypt(defaultMessage, password);
     console.log("The encrypted message: " + encryptedDefault)
-
-    // Remove
-    // Sign the Defalut message. THIS SHOULD BE REMOVED FOR THE FINAL SIGN INSTEAD.
-    const signedDefault = await sign(encryptedDefault);
-    console.log("The signedDefault message: " + signedDefault);
-    // Remove
-
     // Not implemented correctly:
     // Currently: takes recipient array and gives them all the same signed default message 
     // this is incorrect behavior
@@ -208,7 +224,7 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
     // pubkey: "KEYABCDEFG1234567890XYZ12" message: "Uniques message for reciever[i]"
     // pubkey: "KEYABCDEFG1234567890XYZ123" message: "Uniques message for reciever[i+1]"
     // pubkey: "KEYABCDEFG1234567890XYZ1234" message: "Uniques message for reciever[i+2]"
-    let embeddedData = { default: { message: signedDefault }, recipients: [] };
+    let embeddedData = { default: { message: encryptedDefault }, recipients: [] };
     console.log("The embedded data" + embeddedData);
     // This function should work for the future and getting the unique messages via recipient.message[i] into the file.
     for (const recipient of recipients) {
@@ -221,7 +237,7 @@ export async function stampEmbedSignDestination(image, password, defaultMessage,
     console.log("Returning the following values: ");
     const finalCanvas = await embed(canvas, JSON.stringify(embeddedData));
     // Signs the new canvas and returns a base58 sign output string.
-    let signOutput = await signature(finalCanvas); // Signature output in base58
+    let signOutput = await signature(finalCanvas, keypair); // Signature output in base58
     console.log("The embeded canvas: " + finalCanvas);
     console.log("The signature output: " + signOutput);
     // Returns the finalCanvas and the sign message output.
@@ -263,7 +279,7 @@ export async function embedAnonymous(image, message, password) {
  */
 export async function extractSign(image) {
     console.log("Your image file: " + image);
-    const extractedData = extract(image);
+    const extractedData = await extract(image);
     // Signature verification logic should be added here. Returning a TRUE valid or FALSE invalid statement.
     return extractedData;
 }
@@ -277,7 +293,7 @@ export async function extractSign(image) {
 export async function extractUnique(image, privateKey) {
     console.log("Your image file: " + image);
     console.log("Your privateKey input: " + privateKey);
-    const extractedData = extract(image);
+    const extractedData = await extract(image);
     console.log("The extracted data: " + extractedData);
     const dataObject = JSON.parse(extractedData);
     console.log("The data object to be read:" + dataObject)
@@ -300,7 +316,7 @@ export async function extractUnique(image, privateKey) {
 export async function extractAnonymous(image, password) {
     console.log("Your image file: " + image);
     console.log("Your password input: " + password);
-    const extractedData = extract(image);
+    const extractedData = await extract(image);
     console.log("The extracted data: " + extractedData);
     console.log(typeof extractedData);
     //const dataObject = JSON.parse(extractedData);
