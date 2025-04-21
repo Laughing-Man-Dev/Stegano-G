@@ -16,10 +16,10 @@ class Keys {
      */
 
     // Update this functions to 1 or the other. Or split it.
-    async exportPublicKey(publicKey) {
+    async exportPublicKey() {
         try {
             // // Export to JWK format
-            const jwk = await crypto.subtle.exportKey("jwk", publicKey);
+            const jwk = await crypto.subtle.exportKey("jwk", this.CryptoKeyPair.publicKey);
             console.log("Public Key (JWK):", jwk);
             // // // Export to SPKI format (DER encoding)
             // const spkiDer = await crypto.subtle.exportKey("spki", publicKey);
@@ -52,7 +52,7 @@ class Keys {
  */
 class SigningKeys extends Keys {
     constructor(CryptoKeyPair = null) {
-        super();
+        super(CryptoKeyPair);
         // Signing & Verifying Keys
         if (CryptoKeyPair == null) {
             CryptoKeyPair = this.genECDSA();
@@ -149,7 +149,7 @@ class SigningKeys extends Keys {
  */
 class EncryptionKeys extends Keys {
     constructor(CryptoKeyPair = null) {
-        super();
+        super(CryptoKeyPair);
         // Encryption & Decryption Keys
         if (CryptoKeyPair == null) {
             CryptoKeyPair = this.genRSA();
@@ -246,17 +246,17 @@ class EncryptionKeys extends Keys {
  * Function list:
  * TBD
  * 
- * @param {SigningKeys} var.getSignKeypair- SigningKeys class to get public and private keys.
- * @param {EncryptionKeys} var.getEncryptKeypair- EncryptionKeys calls to get publick and private keys.
+ * @param {SigningKeys} SigningKeypair- SigningKeys class to get public and private keys.
+ * @param {EncryptionKeys} EncryptionKeypair- EncryptionKeys calls to get publick and private keys.
  * 
  */
 class KeyManager {
-    constructor(SigningKeypair, EncryptionKeyPair) {
-        if (!SigningKeypair || !EncryptionKeyPair) {
+    constructor(SigningKeypair, EncryptionKeypair) {
+        if (!SigningKeypair || !EncryptionKeypair) {
             this.clearKeypair();
         }
         this.SigningKeys = SigningKeypair;
-        this.EncryptionKeys = EncryptionKeyPair;
+        this.EncryptionKeys = EncryptionKeypair;
     }
     /**
      * Clear Keypairs takes current keys in memory and replaces with null
@@ -270,7 +270,7 @@ class KeyManager {
     /**
      * Saves the current key pair to a JSON file.
      * @param {SigningKeys} SigningKeypair - SigningKeys class 
-     * @param {EncryptionKeys} EncryptionKeyPair - EncryptionKeys class
+     * @param {EncryptionKeys} EncryptionKeypair - EncryptionKeys class
      */
     async keypairSave() {
         if (!SigningKeys || !EncryptionKeys) {
@@ -289,7 +289,7 @@ class KeyManager {
             encryptionPrivateKey: exportedEncryptPrivateKey,
             encryptionPublicKey: exportedEncryptPublicKey
         };
-
+        // Save keypair for upload int he future.
         const blob = new Blob([JSON.stringify(keyData, null, 2)], { type: 'application/json' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -298,6 +298,33 @@ class KeyManager {
         link.click();
         document.body.removeChild(link);
     }
+    /**
+     * Downloads the currently active keypairs public keys for both encryption and signing.
+     */
+    async downloadPublicKeys(){
+        // Get SigningKeys public key.
+        // And save.
+        const signPublicKey = await this.SigningKeys.exportPublicKey();
+        const s = new Blob([JSON.stringify(signPublicKey, null, 2)], { type: 'application/json' });
+        const link_s = document.createElement('a');
+        link_s.href = URL.createObjectURL(s);
+        link_s.download = 'signingpublickey.json';
+        document.body.appendChild(link_s);
+        link_s.click();
+        document.body.removeChild(link_s);
+
+        // Get EncryptionKeys public key.
+        // And save.
+        const encryptPublicKey = await this.EncryptionKeys.exportPublicKey();
+        const e = new Blob([JSON.stringify(encryptPublicKey, null, 2)], { type: 'application/json' });
+        const link_e = document.createElement('a');
+        link_e.href = URL.createObjectURL(e);
+        link_e.download = 'encryptionpublickey.json';
+        document.body.appendChild(link_e);
+        link_e.click();
+        document.body.removeChild(link_e);
+    }
+
     /**
         * Loads a key pair from a JSON file.
         * @param {File} file - The JSON file containing the key pair.

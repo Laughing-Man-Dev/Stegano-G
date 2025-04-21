@@ -6,6 +6,7 @@ embedAnonymous, extractAnonymous,
 extractSign, extractUnique, 
 } from "../utils/helperRebase.js";
 import { uploadImage, saveImage, uploadImageExtract } from "../utils/imageLoading.js";
+import { base58Encode } from "../utils/keyManagement.js";
 import { Keys, KeyManager, SigningKeys, EncryptionKeys, Fingerprints} from "../utils/keyManagementClassRebase.js"
 
 
@@ -98,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // console.log("Encrypt keys keypair: " + encryptionkeys.encryptKeypair);
         // console.log("Encrypt key private: " + encryptionkeys.encryptPrivateKey);
         // console.log("Encrypt key public: " + encryptionkeys.encryptPublicKey);
+        signingkeys.
     // Assign KeyManager
         keyManager = new KeyManager(signingkeys,encryptionkeys)
         return {signingkeys, encryptionkeys, keyManager};
@@ -127,28 +129,27 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
     // Save keypair.
-    document.getElementById("saveKey").addEventListener("click", function () {
+    document.getElementById("saveKey").addEventListener("click", async function () {
         let savekeypair = new KeyManager(signingkeys, encryptionkeys);
         console.log(savekeypair);
-        savekeypair.keypairSave();
+        await savekeypair.keypairSave();
         console.log("keypair saved. upload to use in the future.");
         alert("Downloading keypair: " + savekeypair);
+        await savekeypair.downloadPublicKeys();
         // return savekeypair;
     });
     // Show current key. Used to get public key [stamp, share etc.]
     // SOON TO UPTATE TO USE FINGER PRINT.
     document.getElementById("showInUseKey").addEventListener("click", async function () {
         let keyElement = document.getElementsByClassName("publicKey");
-
         console.log("Private key for signing: " + signingkeys.signPrivateKey);
         console.log("Private Key for encryption: " + encryptionkeys.encryptPrivateKey);
-        
-
         console.log("Public key for signing: " +  signingkeys.signPublicKey);
         console.log("Public Key for encryption: " + encryptionkeys.encryptPublicKey);
-
-        await writeMessageOutput(keyElement, "sign: " + signingkeys.signPublicKey + 
-        "<br>" + "encrypt: " + encryptionkeys.encryptPublicKey );
+        let sOut = await signingkeys.exportPublicKey();
+        let eOut = await encryptionkeys.exportPublicKey();
+        await writeMessageOutput(keyElement, "SIGNING PUBLIC KEY: " + sOut.x + sOut.y + 
+        "<br>" + "<br>" +  "ENCRYPTION PUBLIC KEY: " + eOut.n );
 
         // alert("Show In-Use Key function to be implemented!");
     });

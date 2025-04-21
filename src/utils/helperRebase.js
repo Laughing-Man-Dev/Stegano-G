@@ -117,23 +117,6 @@ export async function stampPublicKey() {
  * @param {SigningKeys|EncryptionKeys} keypair - keypair set.
  * @returns {HTMLCanvasElement} - Returns a canvas element with the changes. 
  * 
- * 
- *     if(keypair == SigningKeys) {
-        text = await keypair.arrayBufferToBase64(this.getSignPublicKey()); // Base 64 output
-        console.log("text to print" + text);
-    }
-    if(keypair == EncryptionKeys) {
-        text = await keypair.arrayBufferToBase64(this.getEncryptPublicKey()); //Base 64 output
-        console.log("text to print" + text);
-    }
-    else{
-        Error("You did not provide a keypair"); 
-        return;
-    }
- * 
- * 
- * 
- * 
  */
 export async function stamp(keypair) {
     let text;
